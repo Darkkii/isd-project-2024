@@ -1,0 +1,21 @@
+If:
+  PathMatch: [.*/external/.*]
+Index:
+  Background: Skip
+Diagnostics:
+  Suppress: "*"
+  ClangTidy:
+    Remove: "*"
+---
+If:
+  PathMatch: [src/config/.*]
+Index:
+  Background: Skip
+Diagnostics:
+  Suppress: "*"
+  ClangTidy:
+    Remove: "*"
+
+---
+SemanticTokens:
+  DisabledKinds: [Operator]

@@ -1,4 +1,4 @@
-# International Sensor Development Project 2024-2025
+# International Sensor Development Project 2024
 
 Repository for the International Sensor Development Project source code.
 

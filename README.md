@@ -169,6 +169,8 @@ Output from a successful programming (look for the line that reads **"Programmin
 
 The program should now blink the LED on the Pico.
 
+---
+
 ### Step 6: Setting up CLion Serial Monitor
 
 The Pico Debug Probe sends console prints (printf statements etc.) through a serial connection. To allow printing commands through CLion, the Serial Monitor plugin should be installed.

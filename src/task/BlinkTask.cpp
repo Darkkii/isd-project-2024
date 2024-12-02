@@ -4,6 +4,8 @@
 #include "projdefs.h"
 #include <pico/error.h>
 
+#include <cstdio>
+
 namespace Task
 {
 
@@ -20,6 +22,7 @@ void BlinkTask::run()
             // Blinks LED on the board, 100ms on, 2400 ms off
             cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN,
                                 !cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN));
+            if (cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN)) { printf("Blink"); }
             vTaskDelay(pdMS_TO_TICKS(cyw43_arch_gpio_get(CYW43_WL_GPIO_LED_PIN) ? 100 : 2400));
         }
     }

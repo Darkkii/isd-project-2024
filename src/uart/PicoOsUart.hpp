@@ -26,7 +26,7 @@ class PicoOsUart
                int tx_pin,
                int rx_pin,
                int speed,
-               int stop = 2,
+               int stop = 1,
                int tx_size = 256,
                int rx_size = 256);
     PicoOsUart(const PicoOsUart &) = delete; // prevent copying because each instance is associated with a HW peripheral

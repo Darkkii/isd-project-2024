@@ -54,5 +54,5 @@ set_source_files_properties(
 pico_add_extra_outputs(${PROJECT_NAME})
 
 # Disable usb output, enable uart output
-pico_enable_stdio_usb(${PROJECT_NAME} 0)
-pico_enable_stdio_uart(${PROJECT_NAME} 1)
+pico_enable_stdio_usb(${PROJECT_NAME} 1)
+pico_enable_stdio_uart(${PROJECT_NAME} 0)

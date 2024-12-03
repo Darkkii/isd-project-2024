@@ -22,10 +22,7 @@ enum priority : unsigned int
 class BaseTask
 {
   public:
-    BaseTask(const std::string name,
-             uint32_t stackDepth,
-             void *const thisPtr,
-             priority taskPriority);
+    BaseTask(std::string name, uint32_t stackDepth, void *const thisPtr, priority taskPriority);
     virtual ~BaseTask(){};
     virtual void run() = 0;
     TaskHandle_t getHandle();

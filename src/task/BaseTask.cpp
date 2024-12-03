@@ -1,13 +1,15 @@
 #include "BaseTask.hpp"
 
+#include <utility>
+
 namespace Task
 {
 
-BaseTask::BaseTask(const std::string name,
+BaseTask::BaseTask(std::string name,
                    uint32_t stackDepth,
                    void *const thisPtr,
                    priority taskPriority) :
-    m_Name{name}
+    m_Name{std::move(name)}
 {
     xTaskCreate(runner,
                 m_Name.c_str(),
@@ -21,7 +23,7 @@ TaskHandle_t BaseTask::getHandle() { return m_Handle; }
 
 void BaseTask::runner(void *params)
 {
-    BaseTask *task = static_cast<BaseTask *>(params);
+    auto *task = static_cast<BaseTask *>(params);
     task->run();
 }
 

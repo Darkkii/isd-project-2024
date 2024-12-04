@@ -269,7 +269,7 @@ make
 sudo make install
 ```
 
-To allow OpenOCD to be called without sudo, run the follow commands to update the udev rules:
+To allow OpenOCD to be called without sudo, run the following commands to update the udev rules:
 
 ```
 sudo cp ~/pico/openocd/contrib/60-openocd.rules /etc/udev/rules.d/

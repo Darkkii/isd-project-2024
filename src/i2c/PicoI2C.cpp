@@ -15,8 +15,8 @@
 #include "DebugTask.h"
 #endif
 
-#define I2C0_SDA_PIN 16
-#define I2C0_SCL_PIN 17
+#define I2C0_SDA_PIN 12
+#define I2C0_SCL_PIN 13
 
 #define I2C1_SDA_PIN 14
 #define I2C1_SCL_PIN 15

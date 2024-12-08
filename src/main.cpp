@@ -3,6 +3,7 @@
 #include "queue.h"
 #include "task.h"
 #include "task/BlinkTask.hpp"
+#include "task/I2CTask.h"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -26,13 +27,16 @@ int main()
     // Create shared resources
     auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
+    auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 115200);
     auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
 
     // Create queues
 
+
     // Create task objects
-    auto blinkTask = new Task::BlinkTask();
+    auto i2cTask = new Task::I2CTask(picoI2c1, picoUart0);
+   // auto blinkTask = new Task::BlinkTask();
+
 
     // Start scheduler
     vTaskStartScheduler();
@@ -40,7 +44,8 @@ int main()
     while (true) {};
 
     // Delete task objects, can silence some warnings about unused variables
-    delete blinkTask;
+    //delete blinkTask;
+    delete i2cTask;
 
     return 0;
 }

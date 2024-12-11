@@ -30,9 +30,9 @@ SensDust::SensDust(uint8_t *data) {
 
 std::string SensDust::toString() {
     char result[500];
-    sprintf(result, "SensorNr. %u\n Concentration PM1.0 %u, PM2.5 %u, PM10.0 %u \n "
-                    "Atmospheric environment Concentration: PM1.0 %u, PM2.5 %u, PM10.0 %u \n"
-                    "Number of Particles: 0.3 um: %u, 0.5 um: %u, 1.0 um: %u, 2.5 um: %u, 5.0 um: %u, 10 um: %u\n",
+    sprintf(result, "SensorNr. %u\r\n Concentration PM1.0 %u, PM2.5 %u, PM10.0 %u \r\n "
+                    "Atmospheric environment Concentration: PM1.0 %u, PM2.5 %u, PM10.0 %u \r\n"
+                    "Number of Particles: 0.3 um: %u, 0.5 um: %u, 1.0 um: %u, 2.5 um: %u, 5.0 um: %u, 10 um: %u\r\n",
             sensorNum, pm1_0Concentration, pm2_5Concentration, pm10_0Concentration,
             pm1_0ConcentrationAtmospheric, pm2_5ConcentrationAtmospheric, pm10_0ConcentrationAtmospheric,
             numPart0_3, numPart0_5, numPart1_0, numPart2_5, numPart5_0, numPart10);

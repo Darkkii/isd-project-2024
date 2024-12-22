@@ -11,10 +11,14 @@ add_executable(${PROJECT_NAME}
         task/BlinkTask.cpp
 
         uart/PicoOsUart.cpp
+        sensors/RTClib.h
+        sensors/RTClib.cpp
         task/I2CTask.cpp
         task/I2CTask.h
         sensors/SensDust.cpp
         sensors/SensDust.h
+        sensors/MS430.cpp
+        sensors/MS430.h
 )
 
 # Include directories

@@ -26,8 +26,8 @@ class MS430
     bool sound_stable;
 
   public:
-    explicit MS430(uint8_t * airData, uint8_t * airQualityData, uint8_t * lightData, uint8_t * soundData);
-    std::string toString();
+    explicit MS430(const uint8_t * airData, const uint8_t * airQualityData, const uint8_t * lightData, const uint8_t * soundData);
+    std::string toString() const;
 };
 
 #endif // ISD_PROJECT_MS430_H

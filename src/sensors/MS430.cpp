@@ -4,11 +4,11 @@
 
 #include "MS430.h"
 
-MS430::MS430(uint8_t *airData, uint8_t *airQualityData, uint8_t *lightData, uint8_t *soundData)
+MS430::MS430(const uint8_t *airData, const uint8_t *airQualityData, const uint8_t *lightData, const uint8_t *soundData)
 {
     temp = airData[1];
     temp = temp/10;
-    temp += airData[0];
+    temp += (float) airData[0];
     pressure = (airData[5] << 24) | (airData[4] << 16) | (airData[3] << 8) | airData[2];
     hum = airData[7];
     hum = hum/10;
@@ -16,33 +16,34 @@ MS430::MS430(uint8_t *airData, uint8_t *airQualityData, uint8_t *lightData, uint
     gas_sens_r = (airData[11] << 24) | (airData[10] << 16) | (airData[9] << 8) | airData[8];
     aqi = airQualityData[2];
     aqi = aqi/10;
-    aqi += ((airQualityData[1] << 8) | airQualityData[0]);
+    aqi += (float) ((airQualityData[1] << 8) | airQualityData[0]);
     co2 = airQualityData[5];
     co2 = co2/10;
-    co2 += ((airQualityData[4] << 8) | airQualityData[3]);
+    co2 += (float) ((airQualityData[4] << 8) | airQualityData[3]);
     voc = airQualityData[8];
     voc = voc/100;
-    voc = ((airQualityData[7] << 8) | airQualityData[6]);
+    voc = (float) ((airQualityData[7] << 8) | airQualityData[6]);
     aqi_accuracy = airQualityData[9];
     illuminance = lightData[2];
     illuminance = illuminance/100;
-    illuminance += ((lightData[1] << 8) | lightData[0]);
+    illuminance += (float) ((lightData[1] << 8) | lightData[0]);
     white_light_level = (lightData[4] << 8) | lightData[3];
     dbA = soundData[1];
     dbA = dbA/10;
-    dbA += soundData[0];
+    dbA += (float) soundData[0];
     for(int i = 0; i<6; i++){
         db[i] = soundData[8+i];
         db[i] = db[i]/10;
-        db[i] += soundData[2+i];
+        db[i] += (float) soundData[2+i];
     }
     peak_sound_amplitude = soundData[16];
     peak_sound_amplitude = peak_sound_amplitude/100;
-    peak_sound_amplitude += ((soundData[15] << 8) | soundData[14]);
+    peak_sound_amplitude += (float) ((soundData[15] << 8) | soundData[14]);
     sound_stable = soundData[17];
 }
 
-std::string MS430::toString() {  char result[500];
+std::string MS430::toString() const {
+    char result[500];
     sprintf(result, "AirData: \r\n Temp %.1f C, Press %u Pa, Hum %.1f %%, gas_resistance %u \r\n"
                     "AirQualityData: \r\n aqi %.1f, co2 %.1f, voc %.2f, aqiAccuracy: %u \r\n"
                     "LightData: \r\n Illuminance %.2f lux, White Light %u \r\n"

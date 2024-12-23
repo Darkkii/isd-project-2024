@@ -28,7 +28,7 @@ class SPS30
     std::string toString();
 };
 
-uint8_t calcCrc(uint8_t data[2]) {
+uint8_t calcCrc(const uint8_t data[2]) {
     uint8_t crc = 0xFF;
     for(int i = 0; i < 2; i++) {
         crc ^= data[i];

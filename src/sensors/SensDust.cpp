@@ -4,7 +4,7 @@
 
 #include "SensDust.h"
 
-SensDust::SensDust(uint8_t *data) {
+SensDust::SensDust(const uint8_t *data) {
     sensorNum = (data[2] << 8) | data[3];
     pm1_0Concentration = (data[4] << 8) | data[5];
     pm2_5Concentration = (data[6] << 8) | data[7];
@@ -19,7 +19,7 @@ SensDust::SensDust(uint8_t *data) {
     numPart5_0 = (data[24] << 8) | data[25];
     numPart10 = (data[26] << 8) | data[27];
     valid = false;
-    int8_t checksum = 0;
+    uint8_t checksum = 0;
     for(int i = 0; i<28; i++){
         checksum += data[i];
     }
@@ -28,7 +28,7 @@ SensDust::SensDust(uint8_t *data) {
     }
 }
 
-std::string SensDust::toString() {
+std::string SensDust::toString() const {
     char result[500];
     sprintf(result, "SensorNr. %u\r\n Concentration PM1.0 %u, PM2.5 %u, PM10.0 %u \r\n "
                     "Atmospheric environment Concentration: PM1.0 %u, PM2.5 %u, PM10.0 %u \r\n"

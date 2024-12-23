@@ -49,7 +49,7 @@ I2CTask::I2CTask(std::shared_ptr<I2c::PicoI2C> i2cDevice, std::shared_ptr<Uart::
     gpio_init(rdy);
     gpio_pull_up(rdy);
     gpio_set_function(rdy, GPIO_FUNC_NULL);
-    gpio_set_irq_enabled_with_callback(RDY_PIN, GPIO_IRQ_EDGE_FALL, 1, newMS430Data);
+    gpio_set_irq_enabled_with_callback(RDY_PIN, GPIO_IRQ_EDGE_FALL, true, newMS430Data);
 }
 
 
@@ -80,15 +80,15 @@ void I2CTask::run()
                 uartDevice->send(addrData);
             }
 
-            int ret;
+            uint ret;
             uint8_t rxdata;
             ret = i2cDevice->read(addr, &rxdata, 1);
             if (ret == 0)
             {
-                // if (addr == 0x08) { uartDevice->send("Sensor Gas SENS V2 not connected"); }
                 if (addr == 0x3c) { uartDevice->send("Display not connected"); }
                 // if (addr == 0x40) { uartDevice->send("Sensor SENS DUST not connected"); }
                 if (addr == 0x68) { uartDevice->send("RTC not connected"); }
+                if (addr == 0x69) { uartDevice->send("SPS30 not connected"); }
                 if (addr == 0x71) { uartDevice->send("Sensor MS430 not connected"); }
             }
             uartDevice->send(ret <= 0 ? "." : "@");
@@ -121,10 +121,10 @@ void I2CTask::run()
 //            rdy2 = gpio_get(rdy);
 //            vTaskDelay(pdMS_TO_TICKS(10));
 //        }
-        int ret =  i2cDevice->write(0x71, &value, 1);
+        uint ret =  i2cDevice->write(0x71, &value, 1);
         uartDevice->send(ret != 1 ? "Write error0 for Combi-Sensor\n" : "");
         rdy2 = gpio_get(RDY_PIN);
-        while(rdy2==true){
+        while(rdy2){
             rdy2 = gpio_get(RDY_PIN);
             vTaskDelay(pdMS_TO_TICKS(10));
         }
@@ -134,7 +134,7 @@ void I2CTask::run()
         vTaskDelay(pdMS_TO_TICKS(10));
         value = 0xE4;
         rdy2 = gpio_get(RDY_PIN);
-        while(rdy2==true){
+        while(rdy2){
             rdy2 = gpio_get(RDY_PIN);
             vTaskDelay(pdMS_TO_TICKS(10));
         }
@@ -142,7 +142,7 @@ void I2CTask::run()
         uartDevice->send(ret != 1 ? "Write error2 for Combi-Sensor\n" : "");
         vTaskDelay(pdMS_TO_TICKS(10));
         rdy2 = gpio_get(RDY_PIN);
-        while(rdy2==true){
+        while(rdy2){
             rdy2 = gpio_get(RDY_PIN);
             vTaskDelay(pdMS_TO_TICKS(10));
         }
@@ -192,7 +192,7 @@ void I2CTask::run()
                                  ? "Data read error for Combi-Sensor\n"
                                  : "");
                 rdy2 = gpio_get(RDY_PIN);
-                while (rdy2 == true)
+                while (rdy2)
                 {
                     rdy2 = gpio_get(RDY_PIN);
                     vTaskDelay(pdMS_TO_TICKS(10));
@@ -202,7 +202,7 @@ void I2CTask::run()
 
                 uartDevice->send(ret != 11 ? "Data read error1 for Combi-Sensor\n" : "");
                 rdy2 = gpio_get(RDY_PIN);
-                while(rdy2==true){
+                while(rdy2){
                     rdy2 = gpio_get(RDY_PIN);
                     vTaskDelay(pdMS_TO_TICKS(10));
                 }
@@ -213,7 +213,7 @@ void I2CTask::run()
                                  : "");
 
                 rdy2 = gpio_get(RDY_PIN);
-                while (rdy2 == true)
+                while (rdy2)
                 {
                     rdy2 = gpio_get(RDY_PIN);
                     vTaskDelay(pdMS_TO_TICKS(10));

@@ -25,8 +25,8 @@ class SensDust
     uint16_t numPart10;
 
   public:
-    explicit SensDust(uint8_t * data);
-    std::string toString();
+    explicit SensDust(const uint8_t * data);
+    std::string toString() const;
     bool valid;
 };
 

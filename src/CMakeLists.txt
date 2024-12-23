@@ -13,12 +13,14 @@ add_executable(${PROJECT_NAME}
         uart/PicoOsUart.cpp
         sensors/RTClib.h
         sensors/RTClib.cpp
+        sensors/SPS30.h
         task/I2CTask.cpp
         task/I2CTask.h
         sensors/SensDust.cpp
         sensors/SensDust.h
         sensors/MS430.cpp
         sensors/MS430.h
+
 )
 
 # Include directories

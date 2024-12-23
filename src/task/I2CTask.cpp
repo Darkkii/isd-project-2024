@@ -10,6 +10,7 @@
 #include "projdefs.h"
 #include "sensors/MS430.h"
 #include "sensors/RTClib.h"
+#include "sensors/SPS30.h"
 #include "sensors/SensDust.h"
 #include <hardware/i2c.h>
 #include <hardware/structs/io_qspi.h>
@@ -19,7 +20,7 @@
 #include <cstdio>
 #include <utility>
 
-#define RDY_PIN 19
+#define RDY_PIN 20
 
 #define DS3231_ADDRESS 0x68   ///< I2C address for DS3231
 #define DS3231_TIME 0x00      ///< Time register
@@ -31,12 +32,24 @@
   0x11 ///< Temperature register (high byte - low byte is at 0x12), 10-bit
 ///< temperature value
 
+volatile uint8_t newDataOnMS430 = 0;
+
+void newMS430Data(uint gpio, uint32_t events){
+    if(gpio == RDY_PIN) { newDataOnMS430 = 1; }
+}
+
 namespace Task
 {
 
 I2CTask::I2CTask(std::shared_ptr<I2c::PicoI2C> i2cDevice, std::shared_ptr<Uart::PicoOsUart> uartDevice) : BaseTask{"I2CTask", 1024, this, HIGH} {
     this->i2cDevice = std::move(i2cDevice);
     this->uartDevice = std::move(uartDevice);
+    int rdy = RDY_PIN;
+
+    gpio_init(rdy);
+    gpio_pull_up(rdy);
+    gpio_set_function(rdy, GPIO_FUNC_NULL);
+    gpio_set_irq_enabled_with_callback(RDY_PIN, GPIO_IRQ_EDGE_FALL, 1, newMS430Data);
 }
 
 
@@ -50,6 +63,8 @@ uint8_t bin2bcd(uint8_t val) { return val + 6 * (val / 10); }
      @return the converted value
  */
 uint8_t dowToDS3231(uint8_t d) { return d == 0 ? 7 : d; }
+
+
 
 void I2CTask::run()
 {
@@ -70,7 +85,7 @@ void I2CTask::run()
             ret = i2cDevice->read(addr, &rxdata, 1);
             if (ret == 0)
             {
-               // if (addr == 0x08) { uartDevice->send("Sensor Gas SENS V2 not connected"); }
+                // if (addr == 0x08) { uartDevice->send("Sensor Gas SENS V2 not connected"); }
                 if (addr == 0x3c) { uartDevice->send("Display not connected"); }
                 // if (addr == 0x40) { uartDevice->send("Sensor SENS DUST not connected"); }
                 if (addr == 0x68) { uartDevice->send("RTC not connected"); }
@@ -98,14 +113,55 @@ void I2CTask::run()
 //        statreg[1] &= ~0x80; // flip OSF bit
 //        i2cDevice->write(0x68, &statreg[0], 1);
 
-        int rdy = RDY_PIN;
 
-        gpio_init(rdy);
-        gpio_pull_up(rdy);
-        gpio_set_function(rdy, GPIO_FUNC_NULL);
-
+        //Reset MS430
+        uint8_t value = 0xE2;
+        bool rdy2 = gpio_get(RDY_PIN);
+//        while(rdy2==true){
+//            rdy2 = gpio_get(rdy);
+//            vTaskDelay(pdMS_TO_TICKS(10));
+//        }
+        int ret =  i2cDevice->write(0x71, &value, 1);
+        uartDevice->send(ret != 1 ? "Write error0 for Combi-Sensor\n" : "");
+        rdy2 = gpio_get(RDY_PIN);
+        while(rdy2==true){
+            rdy2 = gpio_get(RDY_PIN);
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+        uint8_t val2[2] = {0x89, 0x00};
+        ret =  i2cDevice->write(0x71, &val2[0], 2);
+        uartDevice->send(ret != 2 ? "Write error1 for Combi-Sensor\n" : "");
+        vTaskDelay(pdMS_TO_TICKS(10));
+        value = 0xE4;
+        rdy2 = gpio_get(RDY_PIN);
+        while(rdy2==true){
+            rdy2 = gpio_get(RDY_PIN);
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+        ret =  i2cDevice->write(0x71, &value, 1);
+        uartDevice->send(ret != 1 ? "Write error2 for Combi-Sensor\n" : "");
+        vTaskDelay(pdMS_TO_TICKS(10));
+        rdy2 = gpio_get(RDY_PIN);
+        while(rdy2==true){
+            rdy2 = gpio_get(RDY_PIN);
+            vTaskDelay(pdMS_TO_TICKS(10));
+        }
+        newDataOnMS430 = 0;
         char data[20];
+        uint8_t tempData[12];
+        uint8_t airQualityData[10];
+        uint8_t lightData[5];
+        uint8_t soundData[18];
 
+        //SPS30
+        //start Measurement
+        //Pointer: 0x0010, 0x05 -> int, 0x00, checksum von 0x05 und 0x00
+        uint8_t sps30Data[2] = {0x05, 0x00};
+        uint8_t sps30StartMeasurement[5] = {0x00, 0x10, 0x05, 0x00, calcCrc(sps30Data)};
+        ret =  i2cDevice->write(0x69, &sps30StartMeasurement[0], 5);
+        uartDevice->send(ret != 5 ? "Write error for SPS30\n" : "");
+        vTaskDelay(pdMS_TO_TICKS(25));
+        uint8_t sps30Meas[30];
 
         while (true)
         {
@@ -125,66 +181,63 @@ void I2CTask::run()
             //            }
 
 
-            //TODO: 0x71 Combi-Sensor -> Daten nacheinander abfragen und Klasse für die Werte erstellen, Nicht getestet, da READY Signal dauerhaft auf HIGH steht und dadurch keine Kommunikation stattfinden kann
-//            uint8_t value = 0xE1;
-//            bool rdy2 = gpio_get(rdy);
-//            while(rdy2==true){
-//                rdy2 = gpio_get(rdy);
-//                vTaskDelay(pdMS_TO_TICKS(10));
-//            }
-//            int ret =  i2cDevice->write(0x71, &value, 1);
-//            uartDevice->send(ret != 1 ? "Write error for Combi-Sensor\n" : "");
-//            rdy2 = gpio_get(rdy);
-//            while(rdy2==true){
-//                rdy2 = gpio_get(rdy);
-//                vTaskDelay(pdMS_TO_TICKS(10));
-//            }
-//            // vTaskDelay(pdMS_TO_TICKS(505));
-//            uint8_t tempData[12];
-//            uint8_t airQualityData[10];
-//            uint8_t lightData[5];
-//            uint8_t soundData[18];
-//            uint8_t value2 = 0x10;
-//
-//            ret = i2cDevice->transaction(0x71, &value2,1, &tempData[0],12);
-//
-//            uartDevice->send(ret != 13 ? "Data read error for Combi-Sensor\n" : "");
-//            rdy2 = gpio_get(rdy);
-//            while(rdy2==true){
-//                rdy2 = gpio_get(rdy);
-//                vTaskDelay(pdMS_TO_TICKS(10));
-//            }
-//            value2 = 0x11;
-////            ret = i2cDevice->transaction(0x71, &value2,1, &airQualityData[0],10);
-////
-////            uartDevice->send(ret != 11 ? "Data read error1 for Combi-Sensor\n" : "");
-////            rdy2 = gpio_get(rdy);
-////            while(rdy2==true){
-////                rdy2 = gpio_get(rdy);
-////                vTaskDelay(pdMS_TO_TICKS(10));
-////            }
-//            value2 = 0x12;
-//            ret = i2cDevice->transaction(0x71, &value2,1, &lightData[0],5);
-//            uartDevice->send(ret != 6 ? "Data read error2 for Combi-Sensor\n" : "");
-//
-//            rdy2 = gpio_get(rdy);
-//            while(rdy2==true){
-//                rdy2 = gpio_get(rdy);
-//                vTaskDelay(pdMS_TO_TICKS(10));
-//            }
-//            value2 = 0x13;
-//            ret = i2cDevice->transaction(0x71, &value2,1, &soundData[0],18);
-//            uartDevice->send(ret != 19 ? "Data read error3 for Combi-Sensor\n" : "");
-//            vTaskDelay(pdMS_TO_TICKS(500));
-//
-//            MS430 ms430Data = MS430(&tempData[0], &airQualityData[0], &lightData[0], &soundData[0]);
-//            uartDevice->send(ms430Data.toString());
-//            uartDevice->send("Done Reading MS430\r\n");
+            //0x71 Combi-Sensor
+            if(newDataOnMS430 == 1)
+            {
+                uint8_t value2 = 0x10;
+
+                ret = i2cDevice->transaction(0x71, &value2, 1, &tempData[0], 12);
+
+                uartDevice->send(ret != 13
+                                 ? "Data read error for Combi-Sensor\n"
+                                 : "");
+                rdy2 = gpio_get(RDY_PIN);
+                while (rdy2 == true)
+                {
+                    rdy2 = gpio_get(RDY_PIN);
+                    vTaskDelay(pdMS_TO_TICKS(10));
+                }
+                value2 = 0x11;
+                ret = i2cDevice->transaction(0x71, &value2,1, &airQualityData[0],10);
+
+                uartDevice->send(ret != 11 ? "Data read error1 for Combi-Sensor\n" : "");
+                rdy2 = gpio_get(RDY_PIN);
+                while(rdy2==true){
+                    rdy2 = gpio_get(RDY_PIN);
+                    vTaskDelay(pdMS_TO_TICKS(10));
+                }
+                value2 = 0x12;
+                ret = i2cDevice->transaction(0x71, &value2, 1, &lightData[0], 5);
+                uartDevice->send(ret != 6
+                                 ? "Data read error2 for Combi-Sensor\n"
+                                 : "");
+
+                rdy2 = gpio_get(RDY_PIN);
+                while (rdy2 == true)
+                {
+                    rdy2 = gpio_get(RDY_PIN);
+                    vTaskDelay(pdMS_TO_TICKS(10));
+                }
+                value2 = 0x13;
+                ret = i2cDevice->transaction(0x71, &value2, 1, &soundData[0], 18);
+                uartDevice->send(ret != 19
+                                 ? "Data read error3 for Combi-Sensor\n"
+                                 : "");
+                //vTaskDelay(pdMS_TO_TICKS(500));
+
+                MS430 ms430Data = MS430(&tempData[0],
+                                        &airQualityData[0],
+                                        &lightData[0],
+                                        &soundData[0]);
+                uartDevice->send(ms430Data.toString());
+                uartDevice->send("Done Reading MS430\r\n");
+                newDataOnMS430 = 0;
+            }
             //RTC-Modul
 
             uint8_t buffer[7];
             buffer[0] = 0;
-            int ret = i2cDevice->transaction(0x68, &buffer[0], 1, &buffer[0],7);
+            ret = i2cDevice->transaction(0x68, &buffer[0], 1, &buffer[0],7);
             uartDevice->send(ret != 8 ? "Data read error for RTC\n" : "");
 
             DateTime dateTime = DateTime(bcd2bin(buffer[6]) + 2000U, bcd2bin(buffer[5] & 0x7F),
@@ -197,7 +250,32 @@ void I2CTask::run()
 
             uartDevice->send(dateTime.toString(dateFormat));
             vTaskDelay(pdMS_TO_TICKS(1000));
-            //TODO: Bonus SPS30 I2c ausprobieren
+
+            //Bonus SPS30 I2c -> 0x69
+//            uint8_t sps30Rdy[3];
+//            //Read data ready flag
+//            sps30Data[0] = 0x02;
+//            sps30Data[1] = 0x02;
+            //Pointer: 0x0300, 2 data, checksum ... int insgesamt: 30
+//            ret =  i2cDevice->write(0x69, &sps30Data[0], 2);
+//            uartDevice->send(ret != 2 ? "Write error0 for SPS30\n" : "");
+//            ret =  i2cDevice->read(0x69, &sps30Rdy[0], 3);
+//            uartDevice->send(ret != 3 ? "Read error0 for SPS30\n" : "");
+//            uint8_t check = calcCrc(sps30Rdy);
+//            uartDevice->send(check != sps30Rdy[2] ? "Read error1 for SPS30\n" : "");
+
+            //Read Measured Values
+            sps30Data[0] = 0x03;
+            sps30Data[1] = 0x00;
+            //Pointer: 0x0300, 2 data, checksum ... int insgesamt: 30
+            ret =  i2cDevice->write(0x69, &sps30Data[0], 2);
+            uartDevice->send(ret != 2 ? "Write error1 for SPS30\n" : "");
+            ret =  i2cDevice->read(0x69,  &sps30Meas[0], 30);
+            uartDevice->send(ret != 30 ? "Read error1 for SPS30\n" : "");
+
+            auto sps30Decoded = SPS30<uint16_t>(&sps30Meas[0]);
+            uartDevice->send(sps30Decoded.toString());
+            uartDevice->send("Done Reading SPS30\r\n");
 
             //TODO: Bonus: Display
 

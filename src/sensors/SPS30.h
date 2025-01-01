@@ -78,8 +78,8 @@ std::string SPS30<T>::toString()
 {
     char result[500];
     if constexpr (std::is_same_v<T, uint16_t>) {
-         sprintf(result, "SPS30 Data: \r\npartSize: %u um mass PM1.0: %u um/m^3, mass PM2.5: %u um/m^3, mass PM4.0: %u um/m^3, mass PM10.0: %u um/m^3 \r\n"
-                        "number PM0.5: %u #/cm^3, number PM1.0: %u #/cm^3, number PM2.5: %u #/cm^3, number PM4.0: %u #/cm^3, number PM10.0: %u #/cm^3 \r\n",
+         sprintf(result, "partSize: %u um \r\nMass [um/m^3]: PM1.0: %u, PM2.5: %u, PM4.0: %u, PM10.0: %u\r\n"
+                "Number [#/cm^3]: PM0.5: %u, PM1.0: %u, PM2.5: %u, PM4.0: %u, PM10.0: %u\r\n",
                         partSize, mass1_0, mass2_5, mass4_0, mass10_0,
                         number0_5, number1_0, number2_5, number4_0, number10_0
         );

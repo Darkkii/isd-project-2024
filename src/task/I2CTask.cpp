@@ -4,6 +4,7 @@
 
 #include "I2CTask.h"
 
+#include "Display-lib/SSD1306_OLED.hpp"
 #include "pico/binary_info.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
@@ -21,6 +22,8 @@
 #include <utility>
 
 #define RDY_PIN 20
+
+#define FULLSCREEN (128 * (32/8))
 
 #define DS3231_ADDRESS 0x68   ///< I2C address for DS3231
 #define DS3231_TIME 0x00      ///< Time register
@@ -95,6 +98,20 @@ void I2CTask::run()
             uartDevice->send(addr % 16 == 15 ? "\r\n" : "  ");
         }
         uartDevice->send("Done.\r\n");
+
+
+        auto display = SSD1306(128,32, i2cDevice);
+        display.OLEDbegin();
+        display.OLEDFillScreen(0xF0, 0); // splash screen bars, optional just for effect
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        uint8_t  screenBuffer[FULLSCREEN];
+        if (!display.OLEDSetBufferPtr(128, 32, screenBuffer, sizeof(screenBuffer))) return;
+        display.OLEDclearBuffer();
+        display.setTextColor(WHITE);
+        display.setCursor(10, 10);
+        display.print("I2C TEST");
+        display.OLEDupdate();
+
 
 
 //        DateTime dt = DateTime(2024,12,22,2,7,20); //FIXME: Find way to always have accurate time
@@ -274,10 +291,25 @@ void I2CTask::run()
             uartDevice->send(ret != 30 ? "Read error1 for SPS30\n" : "");
 
             auto sps30Decoded = SPS30<uint16_t>(&sps30Meas[0]);
+            uartDevice->send("SPS30 data\r\n");
             uartDevice->send(sps30Decoded.toString());
-            uartDevice->send("Done Reading SPS30\r\n");
+
 
             //TODO: Bonus: Display
+            if (!display.OLEDSetBufferPtr(128, 32, screenBuffer, sizeof(screenBuffer))) return;
+            display.OLEDclearBuffer();
+            display.setTextColor(WHITE);
+            display.setCursor(0, 0);
+            display.setTextSize(1);
+            std::string str2 = "DD.MM.YY hh:mm:ss\r\n";
+            n = str2.length();
+            char dateFormat2[n + 1];
+            strcpy(dateFormat2, str2.c_str());
+           // display.print(dateTime.toString(dateFormat2));
+           // display.setCursor(10, 13);
+            display.print(sps30Decoded.toString());
+
+            display.OLEDupdate();
 
         }
     }

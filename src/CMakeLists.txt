@@ -4,11 +4,13 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
+        network/dhcp/DhcpServer.cpp
+
         semaphore/Binary.cpp
         semaphore/Mutex.cpp
 
         task/BaseTask.cpp
-        task/BlinkTask.cpp
+        task/NetworkTask.cpp
 
         uart/PicoOsUart.cpp
 )
@@ -22,8 +24,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # Compile definitions
 target_compile_definitions(${PROJECT_NAME} PRIVATE
         NO_SYS=0 # don't want NO_SYS (generally this would be in your lwipopts.h)
-
-        # PICO_CYW43_ARCH_DEFAULT_COUNTRY_CODE=CYW43_COUNTRY_FINLAND
 )
 
 # Compiler options
@@ -40,15 +40,6 @@ target_link_libraries(${PROJECT_NAME}
         hardware_i2c
         FreeRTOS-Kernel-Heap4
         pico_cyw43_arch_lwip_sys_freertos
-        pico_lwip_mbedtls
-        pico_mbedtls
-)
-
-# # Ignore warnings from lwip code
-set_source_files_properties(
-        ${PICO_LWIP_PATH}/src/apps/altcp_tls/altcp_tls_mbedtls.c
-        PROPERTIES
-        COMPILE_OPTIONS "-Wno-unused-result"
 )
 
 pico_add_extra_outputs(${PROJECT_NAME})

@@ -2,7 +2,7 @@
 #include "i2c/PicoI2C.hpp"
 #include "queue.h"
 #include "task.h"
-#include "task/BlinkTask.hpp"
+#include "task/NetworkTask.hpp"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -20,6 +20,8 @@ extern "C"
 
 int main()
 {
+    const std::string network = "192.168.0.0"; // Server components support /24 networks only. Server address is x.x.x.1.
+
     stdio_init_all();
     printf("\nBoot\n");
 
@@ -32,7 +34,7 @@ int main()
     // Create queues
 
     // Create task objects
-    auto blinkTask = new Task::BlinkTask();
+    auto networkTask = new Task::NetworkTask(network);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -40,7 +42,7 @@ int main()
     while (true) {};
 
     // Delete task objects, can silence some warnings about unused variables
-    delete blinkTask;
+    delete networkTask;
 
     return 0;
 }

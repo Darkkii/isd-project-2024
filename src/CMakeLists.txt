@@ -4,11 +4,13 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
+        network/dhcp/DhcpServer.cpp
+
         semaphore/Binary.cpp
         semaphore/Mutex.cpp
 
         task/BaseTask.cpp
-        task/BlinkTask.cpp
+        task/NetworkTask.cpp
 
         uart/PicoOsUart.cpp
 )

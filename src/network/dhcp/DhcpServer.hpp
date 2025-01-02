@@ -23,7 +23,7 @@ class DhcpServer
   private:
     ip_addr_t m_Ip{};
     ip_addr_t m_Netmask{};
-    uint8_t m_LeaseMax{24}; //
+    uint8_t m_LeaseMax{24};
     udp_pcb *m_Udp{};
     std::vector<struct DhcpLease> m_Leases;
 };

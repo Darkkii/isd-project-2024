@@ -15,7 +15,7 @@ namespace Network::Dhcp
 class DhcpServer
 {
   public:
-    DhcpServer(const std::string &network, uint8_t leaseMax);
+    DhcpServer(const std::string &serverIp, uint8_t leaseMax);
     ~DhcpServer();
     [[nodiscard]] constexpr const udp_pcb *getUdp() const;
     int handleRequest(struct DhcpPayload &payload, struct netif *nif);

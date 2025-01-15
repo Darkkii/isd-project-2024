@@ -3,6 +3,7 @@
 #include "cyw43_config.h"
 #include "network/dhcp/DhcpCommon.hpp"
 #include <lwip/err.h>
+#include <lwip/ip4_addr.h>
 #include <lwip/pbuf.h>
 #include <lwip/udp.h>
 #include <pstl/glue_algorithm_defs.h>
@@ -28,19 +29,13 @@ static void writeOption(uint8_t **options, uint8_t cmd, uint8_t val);
 static void writeOption(uint8_t **options, uint8_t cmd, uint32_t val);
 static void writeOption(uint8_t **options, uint8_t cmd, size_t n, const void *data);
 static uint8_t *findOption(uint8_t *options, uint8_t cmd);
-static uint32_t stringToIp(std::string network);
 
-DhcpServer::DhcpServer(const std::string &network, uint8_t leaseMax) :
+DhcpServer::DhcpServer(const std::string &serverIp, uint8_t leaseMax) :
     m_LeaseMax{leaseMax}
 {
-    uint32_t networkAddress = stringToIp(network);
-    uint8_t octet1 = networkAddress >> 24 & 0xFF;
-    uint8_t octet2 = networkAddress >> 16 & 0xFF;
-    uint8_t octet3 = networkAddress >> 8 & 0xFF;
-
     m_LeaseMax = m_LeaseMax > DHCPS_LEASE_LIMIT ? DHCPS_LEASE_LIMIT : m_LeaseMax;
 
-    IP4_ADDR(ip_2_ip4(&m_Ip), octet1, octet2, octet3, 1);
+    ip4addr_aton(serverIp.c_str(), ip_2_ip4(&m_Ip));
     IP4_ADDR(ip_2_ip4(&m_Netmask), 255, 255, 255, 0);
 
     m_Leases.resize(m_LeaseMax);
@@ -306,13 +301,6 @@ static uint8_t *findOption(uint8_t *options, uint8_t cmd)
         i += 2 + options[i + 1];
     }
     return nullptr;
-}
-
-static uint32_t stringToIp(std::string network)
-{
-    network.erase(std::remove(network.begin(), network.end(), '.'), network.end());
-
-    return std::stoul(network);
 }
 
 } // namespace Network::Dhcp

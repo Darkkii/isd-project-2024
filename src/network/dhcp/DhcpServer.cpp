@@ -1,6 +1,7 @@
 #include "DhcpServer.hpp"
 
 #include "cyw43_config.h"
+#include "network/NetworkCommon.hpp"
 #include "network/dhcp/DhcpCommon.hpp"
 #include <lwip/err.h>
 #include <lwip/ip4_addr.h>
@@ -21,8 +22,6 @@
 namespace Network::Dhcp
 {
 
-static int udpSend(udp_pcb *udp, netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port);
-static void udpReceive(void *arg, udp_pcb *upcb, pbuf *p, const ip_addr_t *src_addr, u16_t src_port);
 bool ipAvailable(const std::array<uint8_t, MAC_LEN> &mac,
                  const std::array<uint8_t, MAC_LEN> &chaddr);
 static void writeOption(uint8_t **options, uint8_t cmd, uint8_t val);
@@ -58,8 +57,11 @@ DhcpServer::~DhcpServer()
 
 constexpr const udp_pcb *DhcpServer::getUdp() const { return m_Udp; }
 
-int DhcpServer::handleRequest(DhcpPayload &payload, struct netif *nif)
+int DhcpServer::process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, netif *nif)
 {
+    (void)src_addr;
+    (void)src_port;
+
     const auto serverIp = &ip4_addr_get_u32(&m_Ip);
     const auto netmask = &ip4_addr_get_u32(&m_Netmask);
 
@@ -68,9 +70,16 @@ int DhcpServer::handleRequest(DhcpPayload &payload, struct netif *nif)
     const uint8_t *msgtype = nullptr;
     const uint8_t *optRequestIp = nullptr;
 
+    DhcpPayload payload;
     int err = ERR_OK;
     uint8_t yi = 0;
     std::array<uint8_t, MAC_LEN> emptyLease{0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    if (p->tot_len < DHCP_MIN_SIZE) { return -1; }
+
+    size_t len = pbuf_copy_partial(p, &payload, sizeof(payload), 0);
+
+    if (len < DHCP_MIN_SIZE) { return -1; }
 
     std::copy_n(std::cbegin(payload.chaddr), MAC_LEN, chaddr.begin());
 
@@ -195,64 +204,9 @@ int DhcpServer::handleRequest(DhcpPayload &payload, struct netif *nif)
 
     *options++ = DHCP_OPT_END;
 
-    udpSend(m_Udp, nif, &payload, options - (uint8_t *)&payload, 0xffffffff, DHCP_CLIENT_PORT);
+    udpSend(m_Udp, nif, &payload, options - (uint8_t *)&payload, IPADDR_BROADCAST, DHCP_CLIENT_PORT);
 
     return err;
-}
-
-static int udpSend(udp_pcb *udp, netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port)
-{
-    ip_addr_t dest;
-    err_t err;
-    pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
-
-    if (len > 0xffff) { len = 0xffff; }
-
-    if (p == nullptr) { return -ENOMEM; }
-
-    std::memcpy(p->payload, buf, len);
-
-    IP4_ADDR(ip_2_ip4(&dest), ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
-
-    if (nif != nullptr) { err = udp_sendto_if(udp, p, &dest, port, nif); }
-    else { err = udp_sendto(udp, p, &dest, port); }
-
-    pbuf_free(p);
-
-    if (err != ERR_OK) { return err; }
-
-    return len;
-}
-
-static void udpReceive(void *arg, udp_pcb *upcb, pbuf *p, const ip_addr_t *src_addr, u16_t src_port)
-{
-    constexpr uint16_t DHCP_MIN_SIZE = 240 + 3;
-
-    auto *server = static_cast<DhcpServer *>(arg);
-    (void)upcb;
-    (void)src_addr;
-    (void)src_port;
-
-    DhcpPayload payload;
-    netif *nif = ip_current_input_netif();
-
-    if (p->tot_len < DHCP_MIN_SIZE)
-    {
-        pbuf_free(p);
-        return;
-    }
-
-    size_t len = pbuf_copy_partial(p, &payload, sizeof(payload), 0);
-
-    if (len < DHCP_MIN_SIZE)
-    {
-        pbuf_free(p);
-        return;
-    }
-
-    server->handleRequest(payload, nif);
-
-    pbuf_free(p);
 }
 
 bool ipAvailable(const std::array<uint8_t, MAC_LEN> &mac,

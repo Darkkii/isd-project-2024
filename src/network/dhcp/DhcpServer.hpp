@@ -1,6 +1,7 @@
 #ifndef DHCPSERVER_HPP
 #define DHCPSERVER_HPP
 
+#include "network/NetworkCommon.hpp"
 #include <lwip/ip_addr.h>
 #include <lwip/udp.h>
 
@@ -12,18 +13,18 @@
 namespace Network::Dhcp
 {
 
-class DhcpServer
+class DhcpServer : public UdpServer
 {
   public:
-    DhcpServer(const std::string &network, uint8_t leaseMax);
+    DhcpServer(const std::string &serverIp, uint8_t leaseMax);
     ~DhcpServer();
     [[nodiscard]] constexpr const udp_pcb *getUdp() const;
-    int handleRequest(struct DhcpPayload &payload, struct netif *nif);
+    int process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, netif *nif) override;
 
   private:
     ip_addr_t m_Ip{};
     ip_addr_t m_Netmask{};
-    uint8_t m_LeaseMax{24}; //
+    uint8_t m_LeaseMax{24};
     udp_pcb *m_Udp{};
     std::vector<struct DhcpLease> m_Leases;
 };

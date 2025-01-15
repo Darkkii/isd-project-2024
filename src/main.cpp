@@ -20,7 +20,7 @@ extern "C"
 
 int main()
 {
-    const std::string network = "192.168.0.0"; // Server components support /24 networks only. Server address is x.x.x.1.
+    const std::string serverIp = "192.168.0.1"; // Server components support /24 networks only.
 
     stdio_init_all();
     printf("\nBoot\n");
@@ -34,7 +34,7 @@ int main()
     // Create queues
 
     // Create task objects
-    auto networkTask = new Task::NetworkTask(network);
+    auto networkTask = new Task::NetworkTask(serverIp);
 
     // Start scheduler
     vTaskStartScheduler();

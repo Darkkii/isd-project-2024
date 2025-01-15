@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <cstring>
 
+// TODO: split class and callback declarations?
+
 namespace Network
 {
 int udpSend(udp_pcb *udp, netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port);

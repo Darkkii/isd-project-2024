@@ -7,13 +7,8 @@
 namespace Network::Dhcp
 {
 
-constexpr uint8_t DHCP_RESPONSE = 2;
-constexpr uint16_t DHCP_SERVER_PORT = 67;
-constexpr uint16_t DHCP_CLIENT_PORT = 68;
-constexpr uint32_t DEFAULT_LEASE_TIME_S = 60 * 60; // 1 hour lease time
 constexpr uint8_t MAC_LEN = 6;
 constexpr uint8_t DHCPS_BASE_IP = 50;
-constexpr uint8_t DHCPS_LEASE_LIMIT = 254 - DHCPS_BASE_IP;
 
 enum DhcpMessageType : uint8_t
 {

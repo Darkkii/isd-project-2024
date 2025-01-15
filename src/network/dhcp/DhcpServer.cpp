@@ -32,6 +32,9 @@ static uint8_t *findOption(uint8_t *options, uint8_t cmd);
 DhcpServer::DhcpServer(const std::string &serverIp, uint8_t leaseMax) :
     m_LeaseMax{leaseMax}
 {
+    constexpr uint16_t DHCP_SERVER_PORT = 67;
+    constexpr uint8_t DHCPS_LEASE_LIMIT = 254 - DHCPS_BASE_IP;
+
     m_LeaseMax = m_LeaseMax > DHCPS_LEASE_LIMIT ? DHCPS_LEASE_LIMIT : m_LeaseMax;
 
     ip4addr_aton(serverIp.c_str(), ip_2_ip4(&m_Ip));
@@ -59,6 +62,11 @@ constexpr const udp_pcb *DhcpServer::getUdp() const { return m_Udp; }
 
 int DhcpServer::process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, netif *nif)
 {
+    constexpr uint16_t DHCP_CLIENT_PORT = 68;
+    constexpr uint8_t DHCP_RESPONSE = 2;
+    constexpr uint32_t DEFAULT_LEASE_TIME_S = 60 * 60; // 1 hour lease time
+    constexpr uint16_t DHCP_MIN_SIZE = 240 + 3;
+
     (void)src_addr;
     (void)src_port;
 

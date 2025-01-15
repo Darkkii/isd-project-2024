@@ -1,6 +1,7 @@
 #include "NetworkTask.hpp"
 
 #include "network/dhcp/DhcpServer.hpp"
+#include "network/dns/DnsServer.hpp"
 #include "portmacro.h"
 #include <cyw43_configport.h>
 #include <cyw43_ll.h>
@@ -12,9 +13,9 @@
 
 namespace Task
 {
-NetworkTask::NetworkTask(const std::string network) :
+NetworkTask::NetworkTask(const std::string serverIp) :
     BaseTask{"NetworkTask", 256, this, MED},
-    m_Network{std::move(network)}
+    m_ServerIp{std::move(serverIp)}
 {}
 
 void NetworkTask::run()
@@ -23,7 +24,8 @@ void NetworkTask::run()
 
     if (rc != PICO_ERROR_NONE) { networkError(); }
 
-    Network::Dhcp::DhcpServer server(m_Network, 24);
+    Network::Dhcp::DhcpServer dhcp(m_ServerIp, 24);
+    Network::Dns::DnsServer dns(m_ServerIp);
 
     while (true) { vTaskDelay(portMAX_DELAY); }
 }

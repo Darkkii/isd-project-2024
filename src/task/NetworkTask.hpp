@@ -9,12 +9,12 @@ namespace Task
 class NetworkTask : public BaseTask
 {
   public:
-    NetworkTask(const std::string ip);
+    NetworkTask(const std::string serverIp);
     void run() override;
 
   private:
     bool m_Initialized{false};
-    std::string m_Network{"192.168.0.0"};
+    std::string m_ServerIp{"192.168.0.0"};
     std::string m_NetMask{"255.255.255.0"};
     int init();
     void networkError();

@@ -5,11 +5,21 @@
 #ifndef ISD_PROJECT_MS430_H
 #define ISD_PROJECT_MS430_H
 
+#include "i2c/PicoI2C.hpp"
+#include "uart/PicoOsUart.hpp"
+
 #include <cstdint>
+#include <memory>
 #include <string>
+
+
+#define RDY_PIN 20
 
 class MS430
 {
+  private:
+    std::shared_ptr<I2c::PicoI2C> i2cDevice;
+
     float temp;
     uint32_t pressure;
     float hum;
@@ -26,8 +36,16 @@ class MS430
     bool sound_stable;
 
   public:
-    explicit MS430(const uint8_t * airData, const uint8_t * airQualityData, const uint8_t * lightData, const uint8_t * soundData);
-    std::string toString() const;
+    explicit MS430(std::shared_ptr<I2c::PicoI2C> i2cDevice);
+    [[nodiscard]] std::string toString() const;
+    void waitReady();
+    int reset();
+    int configCycleMode();
+    int startCycleMode();
+    int updateEnvironmentData();
+    int updateAirQualityData();
+    int updateLightData();
+    int updateSoundData();
 };
 
 #endif // ISD_PROJECT_MS430_H

@@ -10,6 +10,7 @@
 #include "pico/stdlib.h"
 #include "projdefs.h"
 #include "sensors/MS430.h"
+#include "sensors/RTCModule.h"
 #include "sensors/RTClib.h"
 #include "sensors/SPS30.h"
 #include "sensors/SensDust.h"
@@ -21,19 +22,7 @@
 #include <cstdio>
 #include <utility>
 
-#define RDY_PIN 20
-
 #define FULLSCREEN (128 * (32/8))
-
-#define DS3231_ADDRESS 0x68   ///< I2C address for DS3231
-#define DS3231_TIME 0x00      ///< Time register
-#define DS3231_ALARM1 0x07    ///< Alarm 1 register
-#define DS3231_ALARM2 0x0B    ///< Alarm 2 register
-#define DS3231_CONTROL 0x0E   ///< Control register
-#define DS3231_STATUSREG 0x0F ///< Status register
-#define DS3231_TEMPERATUREREG                                                  \
-  0x11 ///< Temperature register (high byte - low byte is at 0x12), 10-bit
-///< temperature value
 
 volatile uint8_t newDataOnMS430 = 0;
 
@@ -54,19 +43,6 @@ I2CTask::I2CTask(std::shared_ptr<I2c::PicoI2C> i2cDevice, std::shared_ptr<Uart::
     gpio_set_function(rdy, GPIO_FUNC_NULL);
     gpio_set_irq_enabled_with_callback(RDY_PIN, GPIO_IRQ_EDGE_FALL, true, newMS430Data);
 }
-
-
-uint8_t bcd2bin(uint8_t val) { return val - 6 * (val >> 4); }
-uint8_t bin2bcd(uint8_t val) { return val + 6 * (val / 10); }
-/*!
-     @brief  Convert the day of the week to a representation suitable for
-             storing in the DS3231: from 1 (Monday) to 7 (Sunday).
-     @param  d Day of the week as represented by the library:
-             from 0 (Sunday) to 6 (Saturday).
-     @return the converted value
- */
-uint8_t dowToDS3231(uint8_t d) { return d == 0 ? 7 : d; }
-
 
 
 void I2CTask::run()
@@ -113,69 +89,31 @@ void I2CTask::run()
         display.OLEDupdate();
 
 
-
-//        DateTime dt = DateTime(2024,12,22,2,7,20); //FIXME: Find way to always have accurate time
-//        uint8_t buffer[8] = {DS3231_TIME,
-//                             bin2bcd(dt.second()),
-//                             bin2bcd(dt.minute()),
-//                             bin2bcd(dt.hour()),
-//                             bin2bcd(dowToDS3231(dt.dayOfTheWeek())),
-//                             bin2bcd(dt.day()),
-//                             bin2bcd(dt.month()),
-//                             bin2bcd(dt.year() - 2000U)};
-//        i2cDevice->write(0x68, buffer, 8);
-//        uint8_t reg = DS3231_STATUSREG;
-//        uint8_t statreg[2] = {DS3231_STATUSREG, 0};
-//        i2cDevice->transaction(0x68, &reg, 1, &statreg[1], 1);
-//        statreg[1] &= ~0x80; // flip OSF bit
-//        i2cDevice->write(0x68, &statreg[0], 1);
+        auto rtc = RTCModule(i2cDevice, uartDevice);
+      //  rtc.setDateTime(DateTime(2024,12,22,2,7,20)); //FIXME: Find way to always have accurate time
+        std::string str = "DDD, DD MMM YYYY hh:mm:ss\r\n";
+        char dateFormat[ str.length() + 1];
+        strcpy(dateFormat, str.c_str());
+        std::string str2 = "DD.MM.YY hh:mm:ss\r\n";
+        char dateFormat2[str2.length() + 1];
+        strcpy(dateFormat2, str2.c_str());
 
 
-        //Reset MS430
-        uint8_t value = 0xE2;
-        bool rdy2 = gpio_get(RDY_PIN);
-//        while(rdy2==true){
-//            rdy2 = gpio_get(rdy);
-//            vTaskDelay(pdMS_TO_TICKS(10));
-//        }
-        uint ret =  i2cDevice->write(0x71, &value, 1);
-        uartDevice->send(ret != 1 ? "Write error0 for Combi-Sensor\n" : "");
-        rdy2 = gpio_get(RDY_PIN);
-        while(rdy2){
-            rdy2 = gpio_get(RDY_PIN);
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
-        uint8_t val2[2] = {0x89, 0x00};
-        ret =  i2cDevice->write(0x71, &val2[0], 2);
-        uartDevice->send(ret != 2 ? "Write error1 for Combi-Sensor\n" : "");
+        //Setup MS430
+        auto ms430 = MS430(i2cDevice);
+        uartDevice->send(ms430.reset() != 0 ? "Write error Reset for Combi-Sensor\n" : "");
+        uartDevice->send(ms430.configCycleMode() != 0 ? "Write error configCycleMode for Combi-Sensor\n" : "");
         vTaskDelay(pdMS_TO_TICKS(10));
-        value = 0xE4;
-        rdy2 = gpio_get(RDY_PIN);
-        while(rdy2){
-            rdy2 = gpio_get(RDY_PIN);
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
-        ret =  i2cDevice->write(0x71, &value, 1);
-        uartDevice->send(ret != 1 ? "Write error2 for Combi-Sensor\n" : "");
+        uartDevice->send(ms430.startCycleMode() != 0 ? "Write error CycleMode for Combi-Sensor\n" : "");
         vTaskDelay(pdMS_TO_TICKS(10));
-        rdy2 = gpio_get(RDY_PIN);
-        while(rdy2){
-            rdy2 = gpio_get(RDY_PIN);
-            vTaskDelay(pdMS_TO_TICKS(10));
-        }
         newDataOnMS430 = 0;
-        char data[20];
-        uint8_t tempData[12];
-        uint8_t airQualityData[10];
-        uint8_t lightData[5];
-        uint8_t soundData[18];
 
         //SPS30
         //start Measurement
         //Pointer: 0x0010, 0x05 -> int, 0x00, checksum von 0x05 und 0x00
         uint8_t sps30Data[2] = {0x05, 0x00};
         uint8_t sps30StartMeasurement[5] = {0x00, 0x10, 0x05, 0x00, calcCrc(sps30Data)};
-        ret =  i2cDevice->write(0x69, &sps30StartMeasurement[0], 5);
+        uint ret =  i2cDevice->write(0x69, &sps30StartMeasurement[0], 5);
         uartDevice->send(ret != 5 ? "Write error for SPS30\n" : "");
         vTaskDelay(pdMS_TO_TICKS(25));
         uint8_t sps30Meas[30];
@@ -201,70 +139,16 @@ void I2CTask::run()
             //0x71 Combi-Sensor
             if(newDataOnMS430 == 1)
             {
-                uint8_t value2 = 0x10;
-
-                ret = i2cDevice->transaction(0x71, &value2, 1, &tempData[0], 12);
-
-                uartDevice->send(ret != 13
-                                 ? "Data read error for Combi-Sensor\n"
-                                 : "");
-                rdy2 = gpio_get(RDY_PIN);
-                while (rdy2)
-                {
-                    rdy2 = gpio_get(RDY_PIN);
-                    vTaskDelay(pdMS_TO_TICKS(10));
-                }
-                value2 = 0x11;
-                ret = i2cDevice->transaction(0x71, &value2,1, &airQualityData[0],10);
-
-                uartDevice->send(ret != 11 ? "Data read error1 for Combi-Sensor\n" : "");
-                rdy2 = gpio_get(RDY_PIN);
-                while(rdy2){
-                    rdy2 = gpio_get(RDY_PIN);
-                    vTaskDelay(pdMS_TO_TICKS(10));
-                }
-                value2 = 0x12;
-                ret = i2cDevice->transaction(0x71, &value2, 1, &lightData[0], 5);
-                uartDevice->send(ret != 6
-                                 ? "Data read error2 for Combi-Sensor\n"
-                                 : "");
-
-                rdy2 = gpio_get(RDY_PIN);
-                while (rdy2)
-                {
-                    rdy2 = gpio_get(RDY_PIN);
-                    vTaskDelay(pdMS_TO_TICKS(10));
-                }
-                value2 = 0x13;
-                ret = i2cDevice->transaction(0x71, &value2, 1, &soundData[0], 18);
-                uartDevice->send(ret != 19
-                                 ? "Data read error3 for Combi-Sensor\n"
-                                 : "");
-                //vTaskDelay(pdMS_TO_TICKS(500));
-
-                MS430 ms430Data = MS430(&tempData[0],
-                                        &airQualityData[0],
-                                        &lightData[0],
-                                        &soundData[0]);
-                uartDevice->send(ms430Data.toString());
+                uartDevice->send(ms430.updateEnvironmentData() != 0 ? "Data read error for Combi-Sensor\n" : "");
+                uartDevice->send(ms430.updateAirQualityData() != 0 ? "Data read error1 for Combi-Sensor\n" : "");
+                uartDevice->send(ms430.updateLightData() != 0      ? "Data read error2 for Combi-Sensor\n" : "");
+                uartDevice->send(ms430.updateSoundData() != 0      ? "Data read error3 for Combi-Sensor\n" : "");
+                uartDevice->send(ms430.toString());
                 uartDevice->send("Done Reading MS430\r\n");
                 newDataOnMS430 = 0;
             }
             //RTC-Modul
-
-            uint8_t buffer[7];
-            buffer[0] = 0;
-            ret = i2cDevice->transaction(0x68, &buffer[0], 1, &buffer[0],7);
-            uartDevice->send(ret != 8 ? "Data read error for RTC\n" : "");
-
-            DateTime dateTime = DateTime(bcd2bin(buffer[6]) + 2000U, bcd2bin(buffer[5] & 0x7F),
-                                         bcd2bin(buffer[4]), bcd2bin(buffer[2]), bcd2bin(buffer[1]),
-                                         bcd2bin(buffer[0] & 0x7F));
-            std::string str = "DDD, DD MMM YYYY hh:mm:ss\r\n";
-            int n = str.length();
-            char dateFormat[n + 1];
-            strcpy(dateFormat, str.c_str());
-
+            DateTime dateTime =  rtc.getDateTime();
             uartDevice->send(dateTime.toString(dateFormat));
             vTaskDelay(pdMS_TO_TICKS(1000));
 
@@ -295,20 +179,15 @@ void I2CTask::run()
             uartDevice->send(sps30Decoded.toString());
 
 
-            //TODO: Bonus: Display
+            //Display
             if (!display.OLEDSetBufferPtr(128, 32, screenBuffer, sizeof(screenBuffer))) return;
             display.OLEDclearBuffer();
             display.setTextColor(WHITE);
             display.setCursor(0, 0);
             display.setTextSize(1);
-            std::string str2 = "DD.MM.YY hh:mm:ss\r\n";
-            n = str2.length();
-            char dateFormat2[n + 1];
-            strcpy(dateFormat2, str2.c_str());
            // display.print(dateTime.toString(dateFormat2));
            // display.setCursor(10, 13);
             display.print(sps30Decoded.toString());
-
             display.OLEDupdate();
 
         }

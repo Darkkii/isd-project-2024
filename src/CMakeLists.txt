@@ -29,6 +29,8 @@ add_executable(${PROJECT_NAME}
         sensors/SensDust.h
         sensors/MS430.cpp
         sensors/MS430.h
+        sensors/RTCModule.cpp
+        sensors/RTCModule.h
 
 )
 

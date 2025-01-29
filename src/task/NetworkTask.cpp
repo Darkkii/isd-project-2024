@@ -13,8 +13,10 @@
 
 namespace Task
 {
-NetworkTask::NetworkTask(const std::string serverIp) :
+NetworkTask::NetworkTask(const std::shared_ptr<std::string> ssid,
+                         const std::shared_ptr<std::string> serverIp) :
     BaseTask{"NetworkTask", 256, this, MED},
+    m_Ssid{std::move(ssid)},
     m_ServerIp{std::move(serverIp)}
 {}
 
@@ -36,20 +38,14 @@ int NetworkTask::init()
 
     if (rc == PICO_ERROR_NONE)
     {
-        m_Initialized = true;
-
-        cyw43_arch_enable_ap_mode("ISD_SENSOR_DATA", nullptr, CYW43_AUTH_OPEN);
-    }
-
-    return rc;
+        cyw43_arch_enable_ap_mode(m_Ssid->c_str(), nullptr, CYW43_AUTH_OPEN);
 }
 
 void NetworkTask::networkError()
 {
     if (cyw43_is_initialized(&cyw43_state)) { cyw43_arch_deinit(); }
 
-    // TODO: add indicator LED for error state
-    // TODO: retry network init periodically until success
+    // TODO: add indicator LED for error state, retry network init periodically until success
     while (true) { tight_loop_contents(); }
 }
 

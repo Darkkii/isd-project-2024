@@ -20,7 +20,8 @@ extern "C"
 
 int main()
 {
-    const std::string serverIp = "192.168.0.1"; // Server components support /24 networks only.
+    const auto ssid = std::make_shared<std::string>("ISD_SENSOR_DATA");
+    const auto serverIp = std::make_shared<std::string>("192.168.0.1"); // Server components support /24 networks only.
 
     stdio_init_all();
     printf("\nBoot\n");
@@ -34,7 +35,7 @@ int main()
     // Create queues
 
     // Create task objects
-    auto networkTask = new Task::NetworkTask(serverIp);
+    auto networkTask = new Task::NetworkTask(ssid, serverIp);
 
     // Start scheduler
     vTaskStartScheduler();

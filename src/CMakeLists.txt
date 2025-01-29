@@ -6,9 +6,9 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
-        network/NetworkCommon.cpp
         network/dhcp/DhcpServer.cpp
         network/dns/DnsServer.cpp
+        network/udp/UdpCallback.cpp
 
         semaphore/Binary.cpp
         semaphore/Mutex.cpp

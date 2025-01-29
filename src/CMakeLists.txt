@@ -8,6 +8,10 @@ add_executable(${PROJECT_NAME}
 
         network/dhcp/DhcpServer.cpp
         network/dns/DnsServer.cpp
+        network/http/HttpHeader.cpp
+        network/http/HttpServer.cpp
+        network/tcp/TcpCallback.cpp
+        network/tcp/TcpConnection.cpp
         network/udp/UdpCallback.cpp
 
         semaphore/Binary.cpp
@@ -49,5 +53,5 @@ target_link_libraries(${PROJECT_NAME}
 pico_add_extra_outputs(${PROJECT_NAME})
 
 # Enable usb output, disable uart output
-pico_enable_stdio_usb(${PROJECT_NAME} 1)
-pico_enable_stdio_uart(${PROJECT_NAME} 0)
+pico_enable_stdio_usb(${PROJECT_NAME} 0) # TODO: swap before merging
+pico_enable_stdio_uart(${PROJECT_NAME} 1)

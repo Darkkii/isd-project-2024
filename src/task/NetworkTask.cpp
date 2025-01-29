@@ -2,6 +2,7 @@
 
 #include "network/dhcp/DhcpServer.hpp"
 #include "network/dns/DnsServer.hpp"
+#include "network/http/HttpServer.hpp"
 #include "portmacro.h"
 #include <cyw43_configport.h>
 #include <cyw43_ll.h>
@@ -48,6 +49,7 @@ void NetworkTask::run()
 
     Network::Dhcp::DhcpServer dhcp{m_ServerIp, 24};
     Network::Dns::DnsServer dns{m_ServerIp};
+    Network::Http::HttpServer http{m_ServerIp};
 
     while (true) { vTaskDelay(portMAX_DELAY); }
 }

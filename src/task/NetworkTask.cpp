@@ -5,6 +5,9 @@
 #include "portmacro.h"
 #include <cyw43_configport.h>
 #include <cyw43_ll.h>
+#include <lwip/ip4_addr.h>
+#include <lwip/ip_addr.h>
+#include <lwip/netif.h>
 #include <pico/cyw43_arch.h>
 #include <pico/error.h>
 
@@ -22,23 +25,31 @@ NetworkTask::NetworkTask(const std::shared_ptr<std::string> ssid,
 
 void NetworkTask::run()
 {
-    int rc = init();
-
-    if (rc != PICO_ERROR_NONE) { networkError(); }
-
-    Network::Dhcp::DhcpServer dhcp(m_ServerIp, 24);
-    Network::Dns::DnsServer dns(m_ServerIp);
-
-    while (true) { vTaskDelay(portMAX_DELAY); }
-}
-
-int NetworkTask::init()
-{
+    struct netif *interface = nullptr;
     int rc = cyw43_arch_init();
 
     if (rc == PICO_ERROR_NONE)
     {
         cyw43_arch_enable_ap_mode(m_Ssid->c_str(), nullptr, CYW43_AUTH_OPEN);
+        interface = &cyw43_state.netif[CYW43_ITF_AP];
+    }
+
+    if (netif_is_up(interface))
+    {
+        ip_addr_t ip;
+        ip_addr_t netmask;
+
+        ip4addr_aton(m_ServerIp->c_str(), &ip);
+        ip4addr_aton(m_NetMask->c_str(), &netmask);
+        netif_set_addr(interface, &ip, &netmask, &ip);
+    }
+
+    if (rc != PICO_ERROR_NONE) { networkError(); }
+
+    Network::Dhcp::DhcpServer dhcp{m_ServerIp, 24};
+    Network::Dns::DnsServer dns{m_ServerIp};
+
+    while (true) { vTaskDelay(portMAX_DELAY); }
 }
 
 void NetworkTask::networkError()

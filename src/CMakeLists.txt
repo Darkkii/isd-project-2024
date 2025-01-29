@@ -2,6 +2,8 @@
 add_executable(${PROJECT_NAME}
         main.cpp
 
+        fs/File.cpp
+
         i2c/PicoI2C.cpp
 
         network/NetworkCommon.cpp

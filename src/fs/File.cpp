@@ -20,7 +20,7 @@ File::File(Filename filename) :
     m_Start{filename ? scriptStart : indexStart},
     m_End{filename ? scriptEnd : indexEnd},
     m_ReadHead{m_Start},
-    m_Size{static_cast<uint32_t>(&m_End - &m_Start)}
+    m_Size{static_cast<uint32_t>(m_End - m_Start)}
 {}
 
 const std::string &File::read()
@@ -48,4 +48,5 @@ void File::rewind()
     m_ReadBuffer.clear();
     m_Eof = false;
 };
+
 } // namespace Fs

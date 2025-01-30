@@ -1,5 +1,6 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
 // #include "i2c/PicoI2C.hpp" // TODO: enable before merging
+#include "event_groups.h"
 #include "queue.h"
 #include "task.h"
 #include "task/NetworkTask.hpp"
@@ -32,6 +33,9 @@ int main()
     // auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
     // auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
     // auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
+
+    // Event groups
+    auto networkGroup = xEventGroupCreate();
 
     // Create queues
 

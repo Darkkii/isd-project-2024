@@ -124,7 +124,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
         Debug::printInfo("HTTP", "Redirecting client to %s/", m_ServerIp->c_str());
     }
 
-    Debug::printInfo("HTTP", "Sent response for path: %s\n", path.c_str());
+    Debug::printInfo("HTTP", "Sent response for path: %s", path.c_str());
 
     return err;
 }

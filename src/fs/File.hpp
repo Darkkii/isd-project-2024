@@ -19,8 +19,9 @@ class File
     explicit File(Filename filename);
     const std::string &read();
     void rewind();
+    [[nodiscard]] constexpr uint8_t *begin() const { return m_Start; };
     [[nodiscard]] constexpr bool eof() const { return m_Eof; };
-    [[nodiscard]] constexpr uint32_t size() const { return m_Size; }
+    [[nodiscard]] constexpr uint32_t size() const { return m_Size; };
 
   private:
     uint8_t *m_Start;
@@ -29,6 +30,7 @@ class File
     const uint32_t m_Size;
     bool m_Eof{false};
     std::string m_ReadBuffer;
+
     static uint8_t *indexStart;
     static uint8_t *indexEnd;
     static uint8_t *scriptStart;

@@ -1,6 +1,6 @@
 #include "Mutex.hpp"
 
-namespace Semaphore
+namespace Rtos::Semaphore
 {
 
 Mutex::Mutex() { m_Semaphore = xSemaphoreCreateMutex(); }
@@ -13,4 +13,4 @@ bool Mutex::try_lock() { return xSemaphoreTake(m_Semaphore, 0); }
 
 void Mutex::unlock() { xSemaphoreGive(m_Semaphore); }
 
-} // namespace Semaphore
+} // namespace Rtos::Semaphore

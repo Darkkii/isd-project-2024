@@ -4,7 +4,7 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "semphr.h"
 
-namespace Semaphore
+namespace Rtos::Semaphore
 {
 
 class Binary
@@ -19,6 +19,6 @@ class Binary
     SemaphoreHandle_t m_Semaphore;
 };
 
-} // namespace Semaphore
+} // namespace Rtos::Semaphore
 
 #endif /* BINARY_HPP */

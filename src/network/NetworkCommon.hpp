@@ -1,25 +1,21 @@
 #ifndef NETWORKCOMMON_HPP
 #define NETWORKCOMMON_HPP
 
-#include <lwip/ip_addr.h>
-#include <lwip/udp.h>
-
-#include <cstdint>
-#include <cstring>
-
-// TODO: split class and callback declarations?
+#include "FreeRTOS.h" // IWYU pragma: keep
+#include "event_groups.h"
 
 namespace Network
 {
-int udpSend(udp_pcb *udp, netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port);
-void udpReceive(void *arg, udp_pcb *upcb, pbuf *p, const ip_addr_t *src_addr, u16_t src_port);
 
-class UdpServer
+enum NetworkEventBits : EventBits_t
 {
-  public:
-    UdpServer() = default;
-    virtual int process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, netif *nif) = 0;
+    WIFI = 0x1,
+    DHCP = 0x2,
+    DNS = 0x4,
+    HTTP = 0x8
 };
+
+constexpr EventBits_t NetworkAllEventBits = 0xF;
 
 } // namespace Network
 

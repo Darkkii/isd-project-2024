@@ -1,13 +1,12 @@
 #include "DhcpServer.hpp"
 
 #include "cyw43_config.h"
-#include "network/NetworkCommon.hpp"
 #include "network/dhcp/DhcpCommon.hpp"
+#include "network/udp/UdpCallback.hpp"
 #include <lwip/err.h>
 #include <lwip/ip4_addr.h>
 #include <lwip/pbuf.h>
 #include <lwip/udp.h>
-#include <pstl/glue_algorithm_defs.h>
 
 #include <algorithm>
 #include <array>
@@ -29,7 +28,7 @@ static void writeOption(uint8_t **options, uint8_t cmd, uint32_t val);
 static void writeOption(uint8_t **options, uint8_t cmd, size_t n, const void *data);
 static uint8_t *findOption(uint8_t *options, uint8_t cmd);
 
-DhcpServer::DhcpServer(const std::string &serverIp, uint8_t leaseMax) :
+DhcpServer::DhcpServer(const std::shared_ptr<std::string> serverIp, uint8_t leaseMax) :
     m_LeaseMax{leaseMax}
 {
     constexpr uint16_t DHCP_SERVER_PORT = 67;
@@ -37,28 +36,24 @@ DhcpServer::DhcpServer(const std::string &serverIp, uint8_t leaseMax) :
 
     m_LeaseMax = m_LeaseMax > DHCPS_LEASE_LIMIT ? DHCPS_LEASE_LIMIT : m_LeaseMax;
 
-    ip4addr_aton(serverIp.c_str(), ip_2_ip4(&m_Ip));
+    ip4addr_aton(serverIp->c_str(), ip_2_ip4(&m_Ip));
     IP4_ADDR(ip_2_ip4(&m_Netmask), 255, 255, 255, 0);
 
     m_Leases.resize(m_LeaseMax);
 
-    m_Udp = udp_new();
-
-    udp_recv(m_Udp, udpReceive, this);
-
-    udp_bind(m_Udp, IP_ANY_TYPE, DHCP_SERVER_PORT);
+    m_UdpPcb = udp_new();
+    udp_recv(m_UdpPcb, Udp::udpReceive, this);
+    udp_bind(m_UdpPcb, IP_ANY_TYPE, DHCP_SERVER_PORT);
 }
 
 DhcpServer::~DhcpServer()
 {
-    if (m_Udp != nullptr)
+    if (m_UdpPcb != nullptr)
     {
-        udp_remove(m_Udp);
-        m_Udp = nullptr;
+        udp_remove(m_UdpPcb);
+        m_UdpPcb = nullptr;
     }
 }
-
-constexpr const udp_pcb *DhcpServer::getUdp() const { return m_Udp; }
 
 int DhcpServer::process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, netif *nif)
 {
@@ -212,9 +207,35 @@ int DhcpServer::process(pbuf *p, const ip_addr_t *src_addr, u16_t src_port, neti
 
     *options++ = DHCP_OPT_END;
 
-    udpSend(m_Udp, nif, &payload, options - (uint8_t *)&payload, IPADDR_BROADCAST, DHCP_CLIENT_PORT);
+    send(nif, &payload, options - (uint8_t *)&payload, IPADDR_BROADCAST, DHCP_CLIENT_PORT);
+
+    pbuf_free(p);
 
     return err;
+}
+
+int DhcpServer::send(netif *nif, const void *buf, size_t len, uint32_t ip, uint16_t port)
+{
+    ip_addr_t dest;
+    err_t err;
+    pbuf *p = pbuf_alloc(PBUF_TRANSPORT, len, PBUF_RAM);
+
+    if (len > 0xffff) { len = 0xffff; }
+
+    if (p == nullptr) { return -ENOMEM; }
+
+    std::memcpy(p->payload, buf, len);
+
+    IP4_ADDR(ip_2_ip4(&dest), ip >> 24 & 0xff, ip >> 16 & 0xff, ip >> 8 & 0xff, ip & 0xff);
+
+    if (nif != nullptr) { err = udp_sendto_if(m_UdpPcb, p, &dest, port, nif); }
+    else { err = udp_sendto(m_UdpPcb, p, &dest, port); }
+
+    pbuf_free(p);
+
+    if (err != ERR_OK) { return err; }
+
+    return len;
 }
 
 bool ipAvailable(const std::array<uint8_t, MAC_LEN> &mac,

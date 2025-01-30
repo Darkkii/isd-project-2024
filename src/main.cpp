@@ -1,9 +1,11 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
-#include "i2c/PicoI2C.hpp"
+// #include "i2c/PicoI2C.hpp" // TODO: enable before merging
+#include "event_groups.h"
 #include "queue.h"
 #include "task.h"
-#include "task/NetworkTask.hpp"
-#include "uart/PicoOsUart.hpp"
+#include "task/AccessPointTask.hpp"
+#include "task/HttpServerTask.hpp"
+// #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
 
@@ -20,21 +22,27 @@ extern "C"
 
 int main()
 {
-    const std::string serverIp = "192.168.0.1"; // Server components support /24 networks only.
+    const auto ssid = std::make_shared<std::string>("ISD_SENSOR_DATA");
+    const auto serverIp = std::make_shared<std::string>("192.168.0.1"); // Server components support /24 networks only.
 
     stdio_init_all();
     printf("\nBoot\n");
 
+    // TODO: enable before merging
     // Create shared resources
-    auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
-    auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
-    auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
+    // auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
+    // auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
+    // auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
+    // auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
+
+    // Event groups
+    auto networkGroup = xEventGroupCreate();
 
     // Create queues
 
     // Create task objects
-    auto networkTask = new Task::NetworkTask(serverIp);
+    auto apTask = new Task::AccessPointTask(ssid, serverIp);
+    auto httpServer = new Task::HttpServerTask(serverIp, networkGroup);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -42,7 +50,8 @@ int main()
     while (true) {};
 
     // Delete task objects, can silence some warnings about unused variables
-    delete networkTask;
+    delete apTask;
+    delete httpServer;
 
     return 0;
 }

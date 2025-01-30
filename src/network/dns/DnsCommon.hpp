@@ -3,19 +3,8 @@
 
 #include <cstdint>
 
-constexpr uint16_t PORT_DNS_SERVER = 53;
 constexpr uint16_t DNS_MESSAGE_LEN_MAX = 512; // Max DNS message length
 constexpr uint16_t DNS_RECORDS_LEN_MAX = 416; // Max DNS message length - headers
-
-// struct dns_header_t
-// {
-//     uint16_t id;
-//     uint16_t flags;
-//     uint16_t question_count;
-//     uint16_t answer_record_count;
-//     uint16_t authority_record_count;
-//     uint16_t additional_record_count;
-// };
 
 extern "C"
 {

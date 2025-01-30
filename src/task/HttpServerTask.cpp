@@ -102,7 +102,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
     static Fs::File indexHtml{Fs::INDEX_HTML};
     static Fs::File scriptJs{Fs::SCRIPT_JS};
 
-    Debug::printInfo("HTTP", "GET request.");
+    Debug::printInfo("HTTP", "Received GET request.");
 
     if (path == "/")
     {

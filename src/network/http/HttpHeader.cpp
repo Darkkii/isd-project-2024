@@ -11,6 +11,6 @@ HttpHeader::HttpHeader(const std::string &ip) :
     m_Header{"HTTP/1.1 302 Redirect\nLocation: http://" + ip + "/\n\n"}
 {}
 
-const std::string &HttpHeader::get() const { return m_Header; }
+const std::string &HttpHeader::str() const { return m_Header; }
 
 } // namespace Network::Http

@@ -12,7 +12,7 @@ class HttpHeader
   public:
     HttpHeader(uint16_t status, uint32_t length);
     HttpHeader(const std::string &ip);
-    [[nodiscard]] const std::string &get() const;
+    [[nodiscard]] const std::string &str() const;
 
   private:
     std::string m_Header;

@@ -4,6 +4,7 @@
 #include "queue.h"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
+#include "task/HttpServerTask.hpp"
 // #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -41,6 +42,7 @@ int main()
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp);
+    auto httpServer = new Task::HttpServerTask(serverIp, networkGroup);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -49,6 +51,7 @@ int main()
 
     // Delete task objects, can silence some warnings about unused variables
     delete apTask;
+    delete httpServer;
 
     return 0;
 }

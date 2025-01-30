@@ -15,8 +15,8 @@ add_executable(${PROJECT_NAME}
         rtos/semaphore/Binary.cpp
         rtos/semaphore/Mutex.cpp
 
+        task/AccessPointTask.cpp
         task/BaseTask.cpp
-        task/NetworkTask.cpp
 
         uart/PicoOsUart.cpp
 )

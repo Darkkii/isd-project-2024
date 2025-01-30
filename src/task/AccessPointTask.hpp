@@ -1,5 +1,5 @@
-#ifndef NETWORKTASK_HPP
-#define NETWORKTASK_HPP
+#ifndef ACCESSPOINTTASK_HPP
+#define ACCESSPOINTTASK_HPP
 
 #include "task/BaseTask.hpp"
 
@@ -8,15 +8,14 @@
 namespace Task
 {
 
-class NetworkTask : public BaseTask
+class AccessPointTask : public BaseTask
 {
   public:
-    NetworkTask(const std::shared_ptr<std::string> ssid,
-                const std::shared_ptr<std::string> serverIp);
+    AccessPointTask(const std::shared_ptr<std::string> ssid,
+                    const std::shared_ptr<std::string> serverIp);
     void run() override;
 
   private:
-    bool m_Initialized{false}; // TODO: need?
     const std::shared_ptr<std::string> m_Ssid{
         std::make_shared<std::string>("ISD_SENSOR_DATA")};
     const std::shared_ptr<std::string> m_ServerIp{
@@ -28,4 +27,4 @@ class NetworkTask : public BaseTask
 
 } // namespace Task
 
-#endif /* NETWORKTASK_HPP */
+#endif /* ACCESSPOINTTASK_HPP */

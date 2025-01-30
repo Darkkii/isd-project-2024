@@ -3,7 +3,7 @@
 #include "event_groups.h"
 #include "queue.h"
 #include "task.h"
-#include "task/NetworkTask.hpp"
+#include "task/AccessPointTask.hpp"
 // #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
@@ -40,7 +40,7 @@ int main()
     // Create queues
 
     // Create task objects
-    auto networkTask = new Task::NetworkTask(ssid, serverIp);
+    auto apTask = new Task::AccessPointTask(ssid, serverIp);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -48,7 +48,7 @@ int main()
     while (true) {};
 
     // Delete task objects, can silence some warnings about unused variables
-    delete networkTask;
+    delete apTask;
 
     return 0;
 }

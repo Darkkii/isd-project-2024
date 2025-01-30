@@ -1,4 +1,4 @@
-#include "NetworkTask.hpp"
+#include "AccessPointTask.hpp"
 
 #include "network/dhcp/DhcpServer.hpp"
 #include "network/dns/DnsServer.hpp"
@@ -16,14 +16,14 @@
 
 namespace Task
 {
-NetworkTask::NetworkTask(const std::shared_ptr<std::string> ssid,
-                         const std::shared_ptr<std::string> serverIp) :
-    BaseTask{"NetworkTask", 256, this, MED},
+AccessPointTask::AccessPointTask(const std::shared_ptr<std::string> ssid,
+                                 const std::shared_ptr<std::string> serverIp) :
+    BaseTask{"AccessPointTask", 256, this, MED},
     m_Ssid{std::move(ssid)},
     m_ServerIp{std::move(serverIp)}
 {}
 
-void NetworkTask::run()
+void AccessPointTask::run()
 {
     struct netif *interface = nullptr;
     int rc = cyw43_arch_init();
@@ -52,7 +52,7 @@ void NetworkTask::run()
     while (true) { vTaskDelay(portMAX_DELAY); }
 }
 
-void NetworkTask::networkError()
+void AccessPointTask::networkError()
 {
     if (cyw43_is_initialized(&cyw43_state)) { cyw43_arch_deinit(); }
 

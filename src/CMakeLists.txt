@@ -9,9 +9,7 @@ add_executable(${PROJECT_NAME}
         network/dhcp/DhcpServer.cpp
         network/dns/DnsServer.cpp
         network/http/HttpHeader.cpp
-        network/http/HttpServer.cpp
-        network/tcp/TcpCallback.cpp
-        network/tcp/TcpConnection.cpp
+
         network/udp/UdpCallback.cpp
 
         semaphore/Binary.cpp

@@ -7,7 +7,7 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "queue.h"
-#include "semaphore/Mutex.hpp"
+#include "rtos/semaphore/Mutex.hpp"
 #include <hardware/irq.h>
 #include <hardware/uart.h>
 
@@ -41,7 +41,7 @@ class PicoOsUart
   private:
     void uart_irq_rx();
     void uart_irq_tx();
-    Semaphore::Mutex access;
+    Rtos::Semaphore::Mutex access;
     QueueHandle_t tx;
     QueueHandle_t rx;
     uart_inst_t *uart;

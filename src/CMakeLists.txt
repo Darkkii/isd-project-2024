@@ -12,8 +12,8 @@ add_executable(${PROJECT_NAME}
 
         network/udp/UdpCallback.cpp
 
-        semaphore/Binary.cpp
-        semaphore/Mutex.cpp
+        rtos/semaphore/Binary.cpp
+        rtos/semaphore/Mutex.cpp
 
         task/BaseTask.cpp
         task/NetworkTask.cpp

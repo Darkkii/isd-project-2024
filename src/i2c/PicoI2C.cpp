@@ -3,7 +3,6 @@
 //
 #include "PicoI2C.hpp"
 
-#include "semaphore/Mutex.hpp"
 #include <hardware/gpio.h>
 #include <hardware/irq.h>
 
@@ -155,7 +154,7 @@ uint PicoI2C::transaction(uint8_t addr,
                           uint rlength)
 {
     assert((wbuffer && wlength > 0) || (rbuffer && rlength > 0));
-    std::lock_guard<Semaphore::Mutex> exclusive(access);
+    std::lock_guard<Rtos::Semaphore::Mutex> exclusive(access);
     task_to_notify = xTaskGetCurrentTaskHandle();
 
     i2c->hw->enable = 0;

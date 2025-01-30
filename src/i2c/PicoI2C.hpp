@@ -6,7 +6,7 @@
 #define PICOI2C_HPP
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "hardware/i2c.h"
-#include "semaphore/Mutex.hpp"
+#include "rtos/semaphore/Mutex.hpp"
 #include "semphr.h"
 #include "task.h"
 
@@ -36,7 +36,7 @@ class PicoI2C
     i2c_inst *i2c;
     int irqn;
     TaskHandle_t task_to_notify;
-    Semaphore::Mutex access;
+    Rtos::Semaphore::Mutex access;
     const uint8_t *wbuf;
     uint wctr;
     uint8_t *rbuf;

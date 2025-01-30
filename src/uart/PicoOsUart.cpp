@@ -4,7 +4,6 @@
 
 #include "PicoOsUart.hpp"
 
-#include "semaphore/Mutex.hpp"
 #include <hardware/gpio.h>
 
 #include <cstring>
@@ -68,7 +67,7 @@ PicoOsUart::PicoOsUart(int uart_nr, int tx_pin, int rx_pin, int speed, int stop,
 
 int PicoOsUart::read(uint8_t *buffer, int size, TickType_t timeout)
 {
-    std::lock_guard<Semaphore::Mutex> exclusive(access);
+    std::lock_guard<Rtos::Semaphore::Mutex> exclusive(access);
     int count = 0;
     while (count < size && xQueueReceive(rx, buffer, timeout) == pdTRUE)
     {
@@ -80,7 +79,7 @@ int PicoOsUart::read(uint8_t *buffer, int size, TickType_t timeout)
 
 int PicoOsUart::write(const uint8_t *buffer, int size, TickType_t timeout)
 {
-    std::lock_guard<Semaphore::Mutex> exclusive(access);
+    std::lock_guard<Rtos::Semaphore::Mutex> exclusive(access);
     int count = 0;
     // write data to queue
     while (count < size && xQueueSendToBack(tx, buffer, timeout) == pdTRUE)
@@ -128,7 +127,7 @@ int PicoOsUart::send(const std::string &str)
 
 int PicoOsUart::flush()
 {
-    std::lock_guard<Semaphore::Mutex> exclusive(access);
+    std::lock_guard<Rtos::Semaphore::Mutex> exclusive(access);
     int count = 0;
     char dummy = 0;
     while (xQueueReceive(rx, &dummy, 0) == pdTRUE) { ++count; }

@@ -16,8 +16,6 @@ void udpReceive(void *arg, udp_pcb *upcb, pbuf *p, const ip_addr_t *src_addr, u1
     netif *nif = ip_current_input_netif();
 
     server->process(p, src_addr, src_port, nif);
-
-    pbuf_free(p);
 }
 
 } // namespace Network::Udp

@@ -143,6 +143,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
 
         while (err == ERR_OK && totalSent < file->size())
         {
+            // Send the file in up to 1kB chunks to the TCP to prevent errors
             dataToSend = (file->size() - totalSent) < KILOBYTE
                              ? (file->size() - totalSent)
                              : KILOBYTE;

@@ -27,8 +27,8 @@ class HttpServerTask : public BaseTask
     void run() override;
 
   private:
-    const std::shared_ptr<std::string> m_ServerIp{};
     netconn *m_ServerConnection{nullptr};
+    const std::shared_ptr<std::string> m_ServerIp{};
     // Rtos::Queue<SensorData, 10> m_Queue;
     EventGroupHandle_t m_EventGroup;
     err_t handleRequest(netconn *client, const std::string &request) const;

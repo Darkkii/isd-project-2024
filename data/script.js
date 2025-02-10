@@ -36,7 +36,7 @@ function styleLanguagesSvg(selectedLang) {
 function setHeading(selectedLang) {
   document.getElementById("header").textContent = isGerman(selectedLang)
     ? "Internationale Sensorentwicklung 2024/2025"
-    : isFinish(selectedLang)
+    : isFinnish(selectedLang)
     ? "Kansainvälinen anturikehitys 2024/2025"
     : "International Sensor Development 2024/2025";
 }
@@ -52,7 +52,7 @@ function setTableContent(selectedLang) {
             <th>${
               isGerman(selectedLang)
                 ? "Wert"
-                : isFinish(selectedLang)
+                : isFinnish(selectedLang)
                 ? "Sisältö"
                 : "Value"
             }</th>
@@ -65,7 +65,7 @@ function setTableContent(selectedLang) {
         <td>${
           isGerman(selectedLang)
             ? measurement.name.ger
-            : isFinish(selectedLang)
+            : isFinnish(selectedLang)
             ? measurement.name.fin
             : measurement.name.en
         }</td>
@@ -98,7 +98,7 @@ function reloadWithQueryParamFor(selectedLang) {
 function downloadCsv() {
   let csvContent = "data:text/csv;charset=utf-8,";
 
-  csvContent += "Name (FIN),Name (GER), Name (EN), Value,Unit" + "\r\n";
+  csvContent += "Name (FIN),Name (GER), Name (EN), Value, Unit" + "\r\n";
   measurements.forEach(function (measurement) {
     let row =
       measurement.name.fin +
@@ -130,7 +130,7 @@ function isEnglish(lang) {
   return lang === "en";
 }
 
-function isFinish(lang) {
+function isFinnish(lang) {
   return lang === "fin";
 }
 

@@ -3,11 +3,9 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "portmacro.h"
-#include "projdefs.h"
 #include "queue.h"
 #include "rtos/semaphore/Mutex.hpp"
 
-#include <cstdint>
 #include <mutex>
 #include <queue>
 #include <utility>
@@ -15,6 +13,7 @@
 namespace Rtos::Queue
 {
 
+// Wrapper for the FreeRTOS queue. Only blocking receive/peek are supported.
 template <typename T, UBaseType_t N>
 class Queue
 {
@@ -31,32 +30,26 @@ class Queue
     bool send(T element)
     {
         std::lock_guard<Semaphore::Mutex> lock(m_Access);
-
-        if (m_Storage.size() < N) { m_Storage.push(std::move(element)); }
-        return xQueueSend(m_Handle, std::addressof(m_Storage.front()), 0);
+        if (m_Storage.size() < N) { m_Storage.emplace(std::move(element)); }
+        return xQueueSend(m_Handle, nullptr, 0);
     }
 
-    T receive() { return receive(0); }
-
-    T receive(TickType_t ticksToWait)
+    T receive()
     {
         std::lock_guard<Semaphore::Mutex> lock(m_Access);
-
-        T *element;
-        xQueueReceive(m_Handle, element, ticksToWait);
-
-        return *element;
+        xQueueReceive(m_Handle, nullptr, portMAX_DELAY);
+        T element = m_Storage.front();
+        m_Storage.pop();
+        return element;
     }
 
-    T peek() { return peek(0); }
-
-    T peek(uint32_t msWaitTime)
+    T peek()
     {
         std::lock_guard<Semaphore::Mutex> lock(m_Access);
-
-        T *element;
-        xQueuePeek(m_Handle, element, pdMS_TO_TICKS(msWaitTime));
-        return *element;
+        xQueuePeek(m_Handle, nullptr, portMAX_DELAY);
+        T element = m_Storage.front();
+        m_Storage.pop();
+        return element;
     }
 
     void reset()
@@ -68,7 +61,7 @@ class Queue
   private:
     Semaphore::Mutex m_Access;
     std::queue<T> m_Storage{};
-    xQueueHandle m_Handle{xQueueCreate(N, sizeof(T *))};
+    xQueueHandle m_Handle{xQueueCreate(N, 0)};
     UBaseType_t m_Length{N};
 };
 

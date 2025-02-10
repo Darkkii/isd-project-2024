@@ -1,6 +1,5 @@
 #include "AccessPointTask.hpp"
 
-#include "network/dhcp/DhcpServer.hpp"
 #include "network/dns/DnsServer.hpp"
 #include "portmacro.h"
 #include <cyw43_configport.h>
@@ -46,7 +45,6 @@ void AccessPointTask::run()
 
     if (rc != PICO_ERROR_NONE) { networkError(); }
 
-    Network::Dhcp::DhcpServer dhcp{m_ServerIp, 24};
     Network::Dns::DnsServer dns{m_ServerIp};
 
     while (true) { vTaskDelay(portMAX_DELAY); }

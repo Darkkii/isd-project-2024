@@ -18,6 +18,7 @@ add_executable(${PROJECT_NAME}
 
         task/AccessPointTask.cpp
         task/BaseTask.cpp
+        task/DhcpServerTask.cpp
         task/HttpServerTask.cpp
 
         uart/PicoOsUart.cpp

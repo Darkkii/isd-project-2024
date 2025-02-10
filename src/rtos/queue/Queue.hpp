@@ -5,17 +5,12 @@
 #include "portmacro.h"
 #include "projdefs.h"
 #include "queue.h"
+#include "rtos/semaphore/Mutex.hpp"
 
 #include <cstdint>
-
-/*
- *   *** WARNING ***
- *   This is a quick and dirty implementation of a C++ wrapper around the FreeRTOS queue.
- *   Care should be taken with the types used with this template as FreeRTOS
- *   queues might not understand all C++ object correctly.
- *   While pointers can be used to work around this issue, but care should be
- *   taken to make sure the pointers remain valid while they remain in the queue.
- */
+#include <mutex>
+#include <queue>
+#include <utility>
 
 namespace Rtos::Queue
 {
@@ -24,8 +19,7 @@ template <typename T, UBaseType_t N>
 class Queue
 {
   public:
-    Queue<T, N>();
-    ~Queue<T, N>()
+    ~Queue()
     {
         if (m_Handle != nullptr)
         {
@@ -34,24 +28,47 @@ class Queue
         }
     }
 
-    bool send(T *element) { return xQueueSend(m_Handle, element, 0); }
+    bool send(T element)
+    {
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
+
+        if (m_Storage.size() < N) { m_Storage.push(std::move(element)); }
+        return xQueueSend(m_Handle, std::addressof(m_Storage.front()), 0);
+    }
+
     T receive() { return receive(0); }
+
     T receive(TickType_t ticksToWait)
     {
-        T element;
-        xQueueReceive(m_Handle, &element, ticksToWait);
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
+
+        T *element;
+        xQueueReceive(m_Handle, element, ticksToWait);
+
+        return *element;
     }
+
     T peek() { return peek(0); }
+
     T peek(uint32_t msWaitTime)
     {
-        T element;
-        xQueuePeek(m_Handle, &element, pdMS_TO_TICKS(msWaitTime));
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
+
+        T *element;
+        xQueuePeek(m_Handle, element, pdMS_TO_TICKS(msWaitTime));
+        return *element;
     }
 
-    void reset() { xQueueReset(m_Handle); }
+    void reset()
+    {
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
+        xQueueReset(m_Handle);
+    }
 
   private:
-    xQueueHandle m_Handle{xQueueCreate(N, sizeof(T))};
+    Semaphore::Mutex m_Access;
+    std::queue<T> m_Storage{};
+    xQueueHandle m_Handle{xQueueCreate(N, sizeof(T *))};
     UBaseType_t m_Length{N};
 };
 

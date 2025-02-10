@@ -4,6 +4,7 @@
 #include "queue.h"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
+#include "task/DhcpServerTask.hpp"
 #include "task/HttpServerTask.hpp"
 // #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
@@ -24,6 +25,7 @@ int main()
 {
     const auto ssid = std::make_shared<std::string>("ISD_SENSOR_DATA");
     const auto serverIp = std::make_shared<std::string>("192.168.0.1"); // Server components support /24 networks only.
+    const auto netmask = std::make_shared<std::string>("255.255.255.0");
 
     stdio_init_all();
     printf("\nBoot\n");
@@ -42,7 +44,8 @@ int main()
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp);
-    auto httpServer = new Task::HttpServerTask(serverIp, networkGroup);
+    auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask);
+    auto httpTask = new Task::HttpServerTask(serverIp, networkGroup);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -51,7 +54,8 @@ int main()
 
     // Delete task objects, can silence some warnings about unused variables
     delete apTask;
-    delete httpServer;
+    delete dhcpTask;
+    delete httpTask;
 
     return 0;
 }

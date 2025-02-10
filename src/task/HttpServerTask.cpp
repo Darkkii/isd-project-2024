@@ -15,7 +15,7 @@
 namespace Task
 {
 
-constexpr uint16_t kilobyte = 1024;
+constexpr uint16_t KILOBYTE = 1024;
 
 err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, size_t *bytes_written);
 
@@ -29,7 +29,7 @@ HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
 void HttpServerTask::run()
 {
     constexpr uint16_t TCP_PORT = 80;
-    // constexpr EventBits_t bitsToWait = Network::WIFI + Network::DHCP + Network::DNS;
+    // constexpr EventBits_t BITS_TO_WAIT = Network::WIFI + Network::DHCP + Network::DNS;
 
     err_t err = ERR_OK;
     netconn *clientConnection;
@@ -37,10 +37,10 @@ void HttpServerTask::run()
     std::string request;
 
     // We wait until WiFi, DHCP and DNS are ready before starting HTTP operations
-    // xEventGroupWaitBits(m_EventGroup, bitsToWait, pdFALSE, pdTRUE, portMAX_DELAY);
+    // xEventGroupWaitBits(m_EventGroup, BITS_TO_WAIT, pdFALSE, pdTRUE, portMAX_DELAY);
     vTaskDelay(pdMS_TO_TICKS(5000)); // TODO: remove once event groups are implemented
 
-    request.resize(kilobyte); // Allocate 1kB for requests
+    request.resize(KILOBYTE); // Allocate 1kB for requests
 
     m_ServerConnection = netconn_new(NETCONN_TCP);
 
@@ -64,9 +64,9 @@ void HttpServerTask::run()
             if (err == ERR_OK)
             {
                 // Copy the request into the buffer, only copy up to 1kB (-1 for null terminator)
-                uint16_t requestSize = netBuffer->p->tot_len < kilobyte
+                uint16_t requestSize = netBuffer->p->tot_len < KILOBYTE
                                            ? netBuffer->p->tot_len
-                                           : kilobyte - 1;
+                                           : KILOBYTE - 1;
                 request.resize(requestSize);
                 netbuf_copy_partial(netBuffer, request.data(), request.length(), 0);
 
@@ -102,7 +102,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
     static Fs::File indexHtml{Fs::INDEX_HTML};
     static Fs::File scriptJs{Fs::SCRIPT_JS};
 
-    Debug::printInfo("HTTP", "GET request.");
+    Debug::printInfo("HTTP", "Received GET request.");
 
     if (path == "/")
     {
@@ -124,7 +124,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
         Debug::printInfo("HTTP", "Redirecting client to %s/", m_ServerIp->c_str());
     }
 
-    Debug::printInfo("HTTP", "Sent response for path: %s\n", path.c_str());
+    Debug::printInfo("HTTP", "Sent response for path: %s", path.c_str());
 
     return err;
 }
@@ -143,9 +143,10 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
 
         while (err == ERR_OK && totalSent < file->size())
         {
-            dataToSend = (file->size() - totalSent) < kilobyte
+            // Send the file in up to 1kB chunks to the TCP to prevent errors
+            dataToSend = (file->size() - totalSent) < KILOBYTE
                              ? (file->size() - totalSent)
-                             : kilobyte;
+                             : KILOBYTE;
 
             err = write(client, file->begin() + totalSent, dataToSend, 0, &sent);
 

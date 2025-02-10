@@ -6,7 +6,8 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
-        network/dhcp/DhcpServer.cpp
+        network/dhcp/DhcpLease.cpp
+        network/dhcp/DhcpMessage.cpp
         network/dns/DnsServer.cpp
         network/http/HttpHeader.cpp
 
@@ -17,6 +18,7 @@ add_executable(${PROJECT_NAME}
 
         task/AccessPointTask.cpp
         task/BaseTask.cpp
+        task/DhcpServerTask.cpp
         task/HttpServerTask.cpp
 
         uart/PicoOsUart.cpp

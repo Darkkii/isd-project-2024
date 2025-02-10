@@ -6,7 +6,8 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
-        network/dhcp/DhcpServer.cpp
+        network/dhcp/DhcpLease.cpp
+        network/dhcp/DhcpMessage.cpp
         network/dns/DnsServer.cpp
         network/http/HttpHeader.cpp
 

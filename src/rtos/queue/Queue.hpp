@@ -30,14 +30,19 @@ class Queue
     bool send(T element)
     {
         std::lock_guard<Semaphore::Mutex> lock(m_Access);
-        if (m_Storage.size() < N) { m_Storage.emplace(std::move(element)); }
-        return xQueueSend(m_Handle, nullptr, 0);
+        bool success = false;
+        if (m_Storage.size() < N)
+        {
+            m_Storage.emplace(std::move(element));
+            success = xQueueSend(m_Handle, nullptr, 0);
+        }
+        return success;
     }
 
     T receive()
     {
-        std::lock_guard<Semaphore::Mutex> lock(m_Access);
         xQueueReceive(m_Handle, nullptr, portMAX_DELAY);
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
         T element = m_Storage.front();
         m_Storage.pop();
         return element;
@@ -45,8 +50,8 @@ class Queue
 
     T peek()
     {
-        std::lock_guard<Semaphore::Mutex> lock(m_Access);
         xQueuePeek(m_Handle, nullptr, portMAX_DELAY);
+        std::lock_guard<Semaphore::Mutex> lock(m_Access);
         T element = m_Storage.front();
         m_Storage.pop();
         return element;

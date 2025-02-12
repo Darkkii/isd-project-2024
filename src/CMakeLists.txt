@@ -16,6 +16,8 @@ add_executable(${PROJECT_NAME}
         rtos/semaphore/Binary.cpp
         rtos/semaphore/Mutex.cpp
 
+        sensor/SensorReading.cpp
+
         task/AccessPointTask.cpp
         task/BaseTask.cpp
         task/DhcpServerTask.cpp

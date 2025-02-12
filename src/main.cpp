@@ -2,6 +2,8 @@
 // #include "i2c/PicoI2C.hpp" // TODO: enable before merging
 #include "event_groups.h"
 #include "queue.h"
+#include "rtos/Queue.hpp"
+#include "sensor/SensorReading.hpp"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
 #include "task/DhcpServerTask.hpp"
@@ -41,6 +43,7 @@ int main()
     auto networkGroup = xEventGroupCreate();
 
     // Create queues
+    Rtos::Queue<Sensor::SensorReading, 10> dataQueue;
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp);

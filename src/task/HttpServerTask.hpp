@@ -10,12 +10,6 @@
 
 #include <memory>
 
-// TODO: sensor data format
-struct SensorData
-{
-    void *data;
-};
-
 namespace Task
 {
 

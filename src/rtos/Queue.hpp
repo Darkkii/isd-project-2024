@@ -22,7 +22,7 @@ class Queue
 {
   public:
     Queue() = default;
-    Queue(const T &) = delete;
+    Queue(const Queue &) = delete;
     ~Queue()
     {
         if (m_Handle != nullptr)

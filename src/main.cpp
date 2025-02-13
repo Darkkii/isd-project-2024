@@ -1,6 +1,7 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
 // #include "i2c/PicoI2C.hpp" // TODO: enable before merging
 #include "event_groups.h"
+#include "network/NetworkGroup.hpp"
 #include "queue.h"
 #include "rtos/Queue.hpp"
 #include "sensor/SensorReading.hpp"
@@ -40,14 +41,14 @@ int main()
     // auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
 
     // Event groups
-    auto networkGroup = xEventGroupCreate();
+    auto networkGroup = std::make_shared<Network::NetworkGroup>();
 
     // Create queues
     Rtos::Queue<Sensor::SensorReading, 10> dataQueue;
 
     // Create task objects
-    auto apTask = new Task::AccessPointTask(ssid, serverIp);
-    auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask);
+    auto apTask = new Task::AccessPointTask(ssid, serverIp, networkGroup);
+    auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask, networkGroup);
     auto httpTask = new Task::HttpServerTask(serverIp, networkGroup);
 
     // Start scheduler

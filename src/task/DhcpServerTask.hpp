@@ -1,8 +1,7 @@
 #ifndef DHCPSERVERTASK_HPP
 #define DHCPSERVERTASK_HPP
 
-#include "FreeRTOS.h" // IWYU pragma: keep
-#include "event_groups.h"
+#include "network/NetworkGroup.hpp"
 #include "network/dhcp/DhcpLease.hpp"
 #include "task/BaseTask.hpp"
 #include <lwip/api.h>
@@ -19,14 +18,15 @@ class DhcpServerTask : public BaseTask
 {
   public:
     DhcpServerTask(const std::shared_ptr<std::string> serverIp,
-                   const std::shared_ptr<std::string> netmask);
+                   const std::shared_ptr<std::string> netmask,
+                   std::shared_ptr<Network::NetworkGroup> networkGroup);
     void run() override;
 
   private:
     netconn *dhcpConnection{nullptr};
     ip_addr_t m_ServerIp{};
     ip_addr_t m_Netmask{};
-    EventGroupHandle_t m_EventGroup;
+    std::shared_ptr<Network::NetworkGroup> m_NetworkGroup;
     std::map<uint8_t, Network::Dhcp::DhcpLease> m_Leases;
 };
 

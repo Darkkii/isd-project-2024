@@ -2,8 +2,8 @@
 
 #include "debug/Print.hpp"
 #include "fs/File.hpp"
+#include "network/NetworkGroup.hpp"
 #include "network/http/HttpHeader.hpp"
-#include "projdefs.h"
 #include <lwip/api.h>
 #include <lwip/err.h>
 #include <lwip/netbuf.h>
@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <utility>
 
 namespace Task
 {
@@ -20,10 +21,10 @@ constexpr uint16_t KILOBYTE = 1024;
 err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, size_t *bytes_written);
 
 HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
-                               EventGroupHandle_t eventGroup) :
+                               std::shared_ptr<Network::NetworkGroup> networkGroup) :
     BaseTask{"HttpServerTask", 256, this, MED},
     m_ServerIp{std::move(serverIp)},
-    m_EventGroup{eventGroup}
+    m_NetworkGroup{std::move(networkGroup)}
 {}
 
 void HttpServerTask::run()
@@ -36,9 +37,8 @@ void HttpServerTask::run()
     netbuf *netBuffer;
     std::string request;
 
-    // We wait until WiFi, DHCP and DNS are ready before starting HTTP operations
-    // xEventGroupWaitBits(m_EventGroup, BITS_TO_WAIT, pdFALSE, pdTRUE, portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(5000)); // TODO: remove once event groups are implemented
+    // We wait until AP, DHCP and DNS tasks are ready before starting HTTP operations
+    m_NetworkGroup->wait(Network::AP_DHCP_DNS);
 
     request.resize(KILOBYTE); // Allocate 1kB for requests
 
@@ -51,6 +51,7 @@ void HttpServerTask::run()
     }
 
     Debug::printInfo("HTTP", "Listening on port %u", TCP_PORT);
+    m_NetworkGroup->set(Network::HTTP);
 
     while (true)
     {

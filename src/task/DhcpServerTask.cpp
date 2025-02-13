@@ -1,6 +1,7 @@
 #include "DhcpServerTask.hpp"
 
 #include "debug/Print.hpp"
+#include "network/NetworkGroup.hpp"
 #include "network/dhcp/DhcpCommon.hpp"
 #include "network/dhcp/DhcpLease.hpp"
 #include "network/dhcp/DhcpMessage.hpp"
@@ -18,6 +19,7 @@
 #include <cstring>
 #include <map>
 #include <string>
+#include <utility>
 #include <vector>
 
 using namespace Network::Dhcp;
@@ -31,8 +33,10 @@ uint8_t getMessageType(DhcpMessage &message);
 uint8_t getRequestedIp(DhcpMessage &message);
 
 DhcpServerTask::DhcpServerTask(const std::shared_ptr<std::string> serverIp,
-                               const std::shared_ptr<std::string> netmask) :
-    BaseTask{"DhcpServerTask", 512, this, MED}
+                               const std::shared_ptr<std::string> netmask,
+                               std::shared_ptr<Network::NetworkGroup> networkGroup) :
+    BaseTask{"DhcpServerTask", 512, this, MED},
+    m_NetworkGroup{std::move(networkGroup)}
 {
     ip4addr_aton(serverIp->c_str(), ip_2_ip4(&m_ServerIp));
     ip4addr_aton(netmask->c_str(), ip_2_ip4(&m_Netmask));
@@ -54,9 +58,8 @@ void DhcpServerTask::run()
     err_t err = ERR_OK;
     netbuf *receiveBuffer;
 
-    // We wait until WiFi is ready before starting DHCP operations
-    // xEventGroupWaitBits(m_EventGroup, Network::WIFI, pdFALSE, pdTRUE, portMAX_DELAY);
-    vTaskDelay(pdMS_TO_TICKS(2500)); // TODO: remove once event group are implemented
+    // We wait until AP task is ready before starting DHCP operations
+    m_NetworkGroup->wait(Network::AP);
 
     dhcpConnection = netconn_new(NETCONN_UDP);
 
@@ -66,6 +69,7 @@ void DhcpServerTask::run()
     }
 
     Debug::printInfo("DHCP", "Listening on port %u", DHCP_SERVER_PORT);
+    m_NetworkGroup->set(Network::DHCP);
 
     // TODO: clean up logic
     while (true)

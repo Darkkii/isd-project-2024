@@ -30,7 +30,6 @@ HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
 void HttpServerTask::run()
 {
     constexpr uint16_t TCP_PORT = 80;
-    // constexpr EventBits_t BITS_TO_WAIT = Network::WIFI + Network::DHCP + Network::DNS;
 
     err_t err = ERR_OK;
     netconn *clientConnection;

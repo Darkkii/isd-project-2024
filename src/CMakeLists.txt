@@ -10,9 +10,11 @@ add_executable(${PROJECT_NAME}
         network/dhcp/DhcpMessage.cpp
         network/dns/DnsServer.cpp
         network/http/HttpHeader.cpp
+        network/NetworkGroup.cpp
 
         network/udp/UdpCallback.cpp
 
+        rtos/EventGroup.cpp
         rtos/semaphore/Binary.cpp
         rtos/semaphore/Mutex.cpp
 

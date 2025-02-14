@@ -15,7 +15,7 @@
 #include "sensors/SPS30.h"
 #include "sensors/SensDust.h"
 #include <hardware/i2c.h>
-#include <hardware/structs/io_qspi.h>
+//#include <hardware/structs/io_qspi.h>
 #include <pico/error.h>
 
 #include <chrono>

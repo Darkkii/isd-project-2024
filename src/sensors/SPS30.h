@@ -6,7 +6,7 @@
 #define ISD_PROJECT_SPS30_H
 
 #include <cstdint>
-#include <stdfloat>
+//#include <stdfloat>
 #include <string>
 
 template <typename T>

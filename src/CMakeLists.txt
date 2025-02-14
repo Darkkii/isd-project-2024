@@ -4,11 +4,18 @@ add_executable(${PROJECT_NAME}
 
         i2c/PicoI2C.cpp
 
+        uart/PicoOsUart.cpp
+        uart/PicoOsUart.hpp
+
         semaphore/Binary.cpp
         semaphore/Mutex.cpp
 
         task/BaseTask.cpp
         task/BlinkTask.cpp
+
+        task/MHZTask.cpp
+        task/MHZTask.h
+
 
         Display-lib/SSD1306_OLED.hpp
         Display-lib/SSD1306_OLED.cpp
@@ -31,6 +38,9 @@ add_executable(${PROJECT_NAME}
         sensors/MS430.h
         sensors/RTCModule.cpp
         sensors/RTCModule.h
+        sensors/MHZ19CSensor.cpp
+        sensors/MHZ19CSensor.h
+
 
 )
 
@@ -38,6 +48,7 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         config
+        uart
 )
 
 # Compile definitions
@@ -63,6 +74,7 @@ target_link_libraries(${PROJECT_NAME}
         pico_cyw43_arch_lwip_sys_freertos
         pico_lwip_mbedtls
         pico_mbedtls
+
 )
 
 # # Ignore warnings from lwip code

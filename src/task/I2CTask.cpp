@@ -111,12 +111,12 @@ void I2CTask::run()
         //SPS30
         //start Measurement
         //Pointer: 0x0010, 0x05 -> int, 0x00, checksum von 0x05 und 0x00
-        uint8_t sps30Data[2] = {0x05, 0x00};
-        uint8_t sps30StartMeasurement[5] = {0x00, 0x10, 0x05, 0x00, calcCrc(sps30Data)};
+        uint8_t sps30Data[2] = {0x03, 0x00};
+        uint8_t sps30StartMeasurement[5] = {0x00, 0x10, 0x03, 0x00, calcCrc(sps30Data)};
         uint ret =  i2cDevice->write(0x69, &sps30StartMeasurement[0], 5);
         uartDevice->send(ret != 5 ? "Write error for SPS30\n" : "");
         vTaskDelay(pdMS_TO_TICKS(25));
-        uint8_t sps30Meas[30];
+        uint8_t sps30Meas[60];
 
         while (true)
         {
@@ -144,7 +144,7 @@ void I2CTask::run()
                 uartDevice->send(ms430.updateLightData() != 0      ? "Data read error2 for Combi-Sensor\n" : "");
                 uartDevice->send(ms430.updateSoundData() != 0      ? "Data read error3 for Combi-Sensor\n" : "");
                 uartDevice->send(ms430.toString());
-                uartDevice->send("Done Reading MS430\r\n");
+               // uartDevice->send("Done Reading MS430\r\n");
                 newDataOnMS430 = 0;
             }
             //RTC-Modul
@@ -171,10 +171,10 @@ void I2CTask::run()
             //Pointer: 0x0300, 2 data, checksum ... int insgesamt: 30
             ret =  i2cDevice->write(0x69, &sps30Data[0], 2);
             uartDevice->send(ret != 2 ? "Write error1 for SPS30\n" : "");
-            ret =  i2cDevice->read(0x69,  &sps30Meas[0], 30);
-            uartDevice->send(ret != 30 ? "Read error1 for SPS30\n" : "");
+            ret =  i2cDevice->read(0x69,  &sps30Meas[0], 60);
+            uartDevice->send(ret != 60 ? "Read error1 for SPS30\n" : "");
 
-            auto sps30Decoded = SPS30<uint16_t>(&sps30Meas[0]);
+            auto sps30Decoded = SPS30<float>(&sps30Meas[0]);
             uartDevice->send("SPS30 data\r\n");
             uartDevice->send(sps30Decoded.toString());
 

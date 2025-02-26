@@ -8,6 +8,7 @@
 #include "task.h"
 #include "task/AccessPointTask.hpp"
 #include "task/DhcpServerTask.hpp"
+#include "task/DnsServerTask.hpp"
 #include "task/HttpServerTask.hpp"
 // #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
@@ -44,11 +45,12 @@ int main()
     auto networkGroup = std::make_shared<Network::NetworkGroup>();
 
     // Create queues
-    Rtos::Queue<Sensor::SensorReading, 10> dataQueue;
+    auto dataQueue = std::make_shared<Rtos::Queue<Sensor::SensorReading, 10>>();
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp, networkGroup);
     auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask, networkGroup);
+    auto dnsTask = new Task::DnsServerTask(serverIp, networkGroup);
     auto httpTask = new Task::HttpServerTask(serverIp, networkGroup);
 
     // Start scheduler
@@ -59,6 +61,7 @@ int main()
     // Delete task objects, can silence some warnings about unused variables
     delete apTask;
     delete dhcpTask;
+    delete dnsTask;
     delete httpTask;
 
     return 0;

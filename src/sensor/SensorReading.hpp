@@ -17,8 +17,8 @@ class SensorReading
 {
   public:
     SensorReading(SensorType type, double value);
-    [[nodiscard]] SensorType type() const;
-    [[nodiscard]] double value() const;
+    [[nodiscard]] SensorType getType() const;
+    [[nodiscard]] double getValue() const;
 
   private:
     const SensorType m_Type{};

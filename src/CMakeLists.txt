@@ -12,8 +12,6 @@ add_executable(${PROJECT_NAME}
         network/http/HttpHeader.cpp
         network/NetworkGroup.cpp
 
-        network/udp/UdpCallback.cpp
-
         rtos/EventGroup.cpp
         rtos/semaphore/Binary.cpp
         rtos/semaphore/Mutex.cpp
@@ -23,6 +21,7 @@ add_executable(${PROJECT_NAME}
         task/AccessPointTask.cpp
         task/BaseTask.cpp
         task/DhcpServerTask.cpp
+        task/DnsServerTask.cpp
         task/HttpServerTask.cpp
 
         uart/PicoOsUart.cpp

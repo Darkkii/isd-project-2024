@@ -29,6 +29,7 @@ class HttpServerTask : public BaseTask
     std::shared_ptr<Network::NetworkGroup> m_NetworkGroup;
     err_t handleRequest(netconn *client, const std::string &request) const;
     err_t sendResponse(netconn *client, std::string &header, Fs::File *file = nullptr) const;
+    err_t sendResponse(netconn *client, std::string &header, std::string &data) const;
     void networkError();
 };
 

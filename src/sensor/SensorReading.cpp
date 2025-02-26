@@ -8,8 +8,8 @@ SensorReading::SensorReading(SensorType type, double value) :
     m_Value{value}
 {}
 
-SensorType SensorReading::type() const { return m_Type; }
+SensorType SensorReading::getType() const { return m_Type; }
 
-double SensorReading::value() const { return m_Value; }
+double SensorReading::getValue() const { return m_Value; }
 
 } // namespace Sensor

@@ -1,11 +1,11 @@
 "use strict";
 
-function setContentDependingOnSelectedLang() {
+async function setContentDependingOnSelectedLang() {
   const selectedLang = getSelectedLang();
 
   styleLanguagesSvg(selectedLang);
   setHeading(selectedLang);
-  setTableContent(selectedLang);
+  await setTableContent(selectedLang);
 }
 
 function getSelectedLang() {
@@ -41,7 +41,7 @@ function setHeading(selectedLang) {
     : "International Sensor Development 2024/2025";
 }
 
-function setTableContent(selectedLang) {
+async function setTableContent(selectedLang) {
   let tableContent = `
         <tr>
             <th style="width: 50%">${
@@ -59,22 +59,46 @@ function setTableContent(selectedLang) {
         </tr>
     `;
 
-  measurements.forEach((measurement) => {
-    tableContent += `
-    <tr>
-        <td>${
-          isGerman(selectedLang)
-            ? measurement.name.ger
-            : isFinnish(selectedLang)
-            ? measurement.name.fin
-            : measurement.name.en
-        }</td>
-        <td>${measurement.value} ${measurement.unit}</td>
-    </tr>
-`;
-  });
+  fetch("/data.json")
+    .then((res) => res.json())
+    .then((data) => {
+      if (!data.length) {
+        return;
+      }
 
-  document.getElementById("table").innerHTML = tableContent;
+      data.forEach((measurement) => {
+        tableContent += `
+      <tr>
+          <td>${
+            isGerman(selectedLang)
+              ? measurement.name.ger
+              : isFinnish(selectedLang)
+              ? measurement.name.fin
+              : measurement.name.en
+          }</td>
+          <td>${measurement.value} ${measurement.unit}</td>
+      </tr>
+      `;
+      });
+    })
+    .finally(() => {
+      document.getElementById("table").innerHTML = tableContent;
+    });
+
+  //   measurements.forEach((measurement) => {
+  //     tableContent += `
+  //     <tr>
+  //         <td>${
+  //           isGerman(selectedLang)
+  //             ? measurement.name.ger
+  //             : isFinnish(selectedLang)
+  //             ? measurement.name.fin
+  //             : measurement.name.en
+  //         }</td>
+  //         <td>${measurement.value} ${measurement.unit}</td>
+  //     </tr>
+  // `;
+  //   });
 }
 
 function registerEventListeners() {
@@ -107,7 +131,7 @@ function downloadCsv() {
       "," +
       measurement.name.en +
       "," +
-      measurement.value +
+      parseFloat(measurement.value).toFixed(2) +
       "," +
       measurement.unit;
     csvContent += row + "\r\n";
@@ -135,35 +159,35 @@ function isFinnish(lang) {
 }
 
 const languages = ["ger", "fin", "en"];
-const measurements = [
-  {
-    name: {
-      ger: "Temperatur",
-      fin: "Lämpötila",
-      en: "Temperature",
-    },
-    value: "20",
-    unit: "°C",
-  },
-  {
-    name: {
-      ger: "Luftfeuchtigkeit",
-      fin: "Ilmankosteus",
-      en: "Humidity",
-    },
-    value: "45",
-    unit: "%",
-  },
-  {
-    name: {
-      ger: "Luftdruck",
-      fin: "Ilmanpaine",
-      en: "Pressure",
-    },
-    value: "1013",
-    unit: "hPa",
-  },
-];
+// const measurements = [
+//   {
+//     name: {
+//       ger: "Temperatur",
+//       fin: "Lämpötila",
+//       en: "Temperature",
+//     },
+//     value: "20",
+//     unit: "°C",
+//   },
+//   {
+//     name: {
+//       ger: "Luftfeuchtigkeit",
+//       fin: "Ilmankosteus",
+//       en: "Humidity",
+//     },
+//     value: "45",
+//     unit: "%",
+//   },
+//   {
+//     name: {
+//       ger: "Luftdruck",
+//       fin: "Ilmanpaine",
+//       en: "Pressure",
+//     },
+//     value: "1013",
+//     unit: "hPa",
+//   },
+// ];
 
 setContentDependingOnSelectedLang();
 registerEventListeners();

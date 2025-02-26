@@ -1,5 +1,6 @@
 #include "DhcpMessage.hpp"
 
+#include "network/NetworkCommon.hpp"
 #include "network/dhcp/DhcpCommon.hpp"
 #include "network/dhcp/DhcpLease.hpp"
 #include <lwip/ip4_addr.h>
@@ -17,39 +18,26 @@ namespace Network::Dhcp
 
 constexpr uint8_t DHCP_RESPONSE = 0x02;
 
-// template <typename T>
-// void deserialize(netbuf *netBuffer, T &value);
-void deserialize(netbuf *netBuffer, uint8_t &value);
-void deserialize(netbuf *netBuffer, uint16_t &value);
-void deserialize(netbuf *netBuffer, uint32_t &value);
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 4> &value);
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 16> &value);
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 64> &value);
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 128> &value);
-void deserialize(netbuf *netBuffer, std::vector<uint8_t> &value);
-
-static uint16_t offset = 0;
-
 DhcpMessage::DhcpMessage(netbuf *netBuffer)
 {
-    offset = 0;
+    uint16_t offset = 0;
 
-    deserialize(netBuffer, m_Op);
-    deserialize(netBuffer, m_Htype);
-    deserialize(netBuffer, m_Hlen);
-    deserialize(netBuffer, m_Hops);
-    deserialize(netBuffer, m_Xid);
-    deserialize(netBuffer, m_Secs);
-    deserialize(netBuffer, m_Flags);
-    deserialize(netBuffer, m_Ciaddr);
-    deserialize(netBuffer, m_Yiaddr);
-    deserialize(netBuffer, m_Siaddr);
-    deserialize(netBuffer, m_Giaddr);
-    deserialize(netBuffer, m_Chaddr);
-    deserialize(netBuffer, m_Sname);
-    deserialize(netBuffer, m_File);
-    deserialize(netBuffer, m_MagicCookie);
-    deserialize(netBuffer, m_Options);
+    deserialize(netBuffer, m_Op, offset);
+    deserialize(netBuffer, m_Htype, offset);
+    deserialize(netBuffer, m_Hlen, offset);
+    deserialize(netBuffer, m_Hops, offset);
+    deserialize(netBuffer, m_Xid, offset);
+    deserialize(netBuffer, m_Secs, offset);
+    deserialize(netBuffer, m_Flags, offset);
+    deserialize(netBuffer, m_Ciaddr, offset);
+    deserialize(netBuffer, m_Yiaddr, offset);
+    deserialize(netBuffer, m_Siaddr, offset);
+    deserialize(netBuffer, m_Giaddr, offset);
+    deserialize(netBuffer, m_Chaddr, offset);
+    deserialize(netBuffer, m_Sname, offset);
+    deserialize(netBuffer, m_File, offset);
+    deserialize(netBuffer, m_MagicCookie, offset);
+    deserialize(netBuffer, m_Options, offset);
 }
 
 void DhcpMessage::setAsResponse()
@@ -157,70 +145,5 @@ std::vector<uint8_t> DhcpMessage::serialize() const
 
     return result;
 }
-
-void deserialize(netbuf *netBuffer, uint8_t &value)
-{
-    netbuf_copy_partial(netBuffer, std::addressof(value), sizeof(value), offset);
-    offset += sizeof(value);
-}
-
-void deserialize(netbuf *netBuffer, uint16_t &value)
-{
-    netbuf_copy_partial(netBuffer, std::addressof(value), sizeof(value), offset);
-    offset += sizeof(value);
-}
-
-void deserialize(netbuf *netBuffer, uint32_t &value)
-{
-    netbuf_copy_partial(netBuffer, std::addressof(value), sizeof(value), offset);
-    offset += sizeof(value);
-}
-
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 4> &value)
-{
-    netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-    offset += value.size();
-}
-
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 16> &value)
-{
-    netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-    offset += value.size();
-}
-
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 64> &value)
-{
-    netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-    offset += value.size();
-}
-
-void deserialize(netbuf *netBuffer, std::array<uint8_t, 128> &value)
-{
-    netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-    offset += value.size();
-}
-
-void deserialize(netbuf *netBuffer, std::vector<uint8_t> &value)
-{
-    value.resize(netBuffer->p->tot_len - offset);
-    netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-    offset += value.size();
-}
-
-// template <typename T>
-// void deserialize(netbuf *netBuffer, T &value)
-// {
-//     static uint16_t offset = 0;
-//     if constexpr (std::is_arithmetic_v<T>)
-//     {
-//         netbuf_copy_partial(netBuffer, std::addressof(value), sizeof(value),
-//         offset); offset += sizeof(value);
-//     }
-//     else
-//     {
-//         netbuf_copy_partial(netBuffer, value.data(), value.size(), offset);
-//         offset += value.size();
-//     }
-// };
 
 } // namespace Network::Dhcp

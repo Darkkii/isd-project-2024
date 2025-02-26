@@ -8,7 +8,7 @@ add_executable(${PROJECT_NAME}
 
         network/dhcp/DhcpLease.cpp
         network/dhcp/DhcpMessage.cpp
-        network/dns/DnsServer.cpp
+        network/dns/DnsMessage.cpp
         network/http/HttpHeader.cpp
         network/NetworkGroup.cpp
 

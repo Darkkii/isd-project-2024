@@ -1,5 +1,7 @@
 "use strict";
 
+let measurements;
+
 async function setContentDependingOnSelectedLang() {
   const selectedLang = getSelectedLang();
 
@@ -66,7 +68,9 @@ async function setTableContent(selectedLang) {
         return;
       }
 
-      data.forEach((measurement) => {
+      measurements = data;
+
+      measurements.forEach((measurement) => {
         tableContent += `
       <tr>
           <td>${
@@ -76,7 +80,7 @@ async function setTableContent(selectedLang) {
               ? measurement.name.fin
               : measurement.name.en
           }</td>
-          <td>${measurement.value} ${measurement.unit}</td>
+          <td>${parseFloat(measurement.value).toFixed(2)} ${measurement.unit}</td>
       </tr>
       `;
       });

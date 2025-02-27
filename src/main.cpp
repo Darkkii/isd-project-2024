@@ -2,6 +2,7 @@
 #include "event_groups.h"
 #include "i2c/PicoI2C.hpp"
 #include "network/NetworkGroup.hpp"
+#include "pico/stdlib.h" // IWYU pragma: keep
 #include "queue.h"
 #include "sensor/MS430.h"
 #include "sensor/SensorData.hpp"
@@ -16,15 +17,15 @@
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
-#include "pico/stdlib.h"
 
 #include <cstdio>
 #include <memory>
 
 volatile uint8_t newDataOnMS430 = 0;
 
-void newMS430Data(uint gpio, uint32_t events){
-    if(gpio == RDY_PIN) { newDataOnMS430 = 1; }
+void newMS430Data(uint gpio, uint32_t events)
+{
+    if (gpio == RDY_PIN) { newDataOnMS430 = 1; }
 }
 
 extern "C"
@@ -79,18 +80,17 @@ int main()
     // 4) Create MHZTask parameter struct
     auto mhzParams = new MHZTaskParams{
         .sensorUart = sensorUart,
-        .logUart    = logUart,
+        .logUart = logUart,
         .sensorData = sensorData,
     };
 
     // 5) Create the MHZTask
-    xTaskCreate(
-        MHZTask,                // The task function
-        "MHZTask",              // Task name
-        2048,                   // Stack size
-        mhzParams,             // Parameter (our struct)
-        tskIDLE_PRIORITY + 1,   // Priority
-        nullptr                 // No handle needed
+    xTaskCreate(MHZTask,                      // The task function
+                "MHZTask",                    // Task name
+                2048,                         // Stack size
+                mhzParams,                    // Parameter (our struct)
+                tskIDLE_PRIORITY + Task::LOW, // Priority
+                nullptr                       // No handle needed
     );
 
     // Start scheduler

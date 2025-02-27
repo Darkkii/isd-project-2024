@@ -2,7 +2,6 @@
 
 #include "debug/Print.hpp"
 #include "network/NetworkGroup.hpp"
-#include "network/dns/DnsServer.hpp"
 #include "portmacro.h"
 #include <cyw43_configport.h>
 #include <cyw43_ll.h>
@@ -37,7 +36,7 @@ void AccessPointTask::run()
         ip_addr_t netmask;
 
         cyw43_arch_enable_ap_mode(m_Ssid->c_str(), nullptr, CYW43_AUTH_OPEN);
-        struct netif *interface = &cyw43_state.netif[CYW43_ITF_AP];
+        netif *interface = &cyw43_state.netif[CYW43_ITF_AP];
 
         if (netif_is_up(interface))
         {
@@ -50,11 +49,6 @@ void AccessPointTask::run()
 
     m_NetworkGroup->set(Network::AP);
     Debug::printInfo("AP", "WiFi network established.");
-
-    // TODO: remove DNS
-    m_NetworkGroup->wait(Network::AP_DHCP);
-    Network::Dns::DnsServer dns{m_ServerIp};
-    m_NetworkGroup->set(Network::DNS);
 
     while (true) { vTaskDelay(portMAX_DELAY); }
 }

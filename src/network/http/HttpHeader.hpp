@@ -10,7 +10,7 @@ namespace Network::Http
 class HttpHeader
 {
   public:
-    HttpHeader(uint16_t status, uint32_t length);
+    HttpHeader(uint16_t status, uint32_t length, std::string contentType);
     HttpHeader(const std::string &ip);
     [[nodiscard]] const std::string &str() const;
 

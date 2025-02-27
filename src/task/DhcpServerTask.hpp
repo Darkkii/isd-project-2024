@@ -23,7 +23,7 @@ class DhcpServerTask : public BaseTask
     void run() override;
 
   private:
-    netconn *dhcpConnection{nullptr};
+    netconn *m_Connection{nullptr};
     ip_addr_t m_ServerIp{};
     ip_addr_t m_Netmask{};
     std::shared_ptr<Network::NetworkGroup> m_NetworkGroup;

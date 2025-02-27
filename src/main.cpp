@@ -3,11 +3,11 @@
 #include "event_groups.h"
 #include "network/NetworkGroup.hpp"
 #include "queue.h"
-#include "rtos/Queue.hpp"
-#include "sensor/SensorReading.hpp"
+#include "sensor/SensorData.hpp"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
 #include "task/DhcpServerTask.hpp"
+#include "task/DnsServerTask.hpp"
 #include "task/HttpServerTask.hpp"
 // #include "uart/PicoOsUart.hpp" // TODO: enable before merging
 #include <hardware/structs/timer.h>
@@ -43,13 +43,14 @@ int main()
     // Event groups
     auto networkGroup = std::make_shared<Network::NetworkGroup>();
 
-    // Create queues
-    Rtos::Queue<Sensor::SensorReading, 10> dataQueue;
+    // Create shared data storage
+    auto sensorData = std::make_shared<Sensor::SensorData>();
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp, networkGroup);
     auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask, networkGroup);
-    auto httpTask = new Task::HttpServerTask(serverIp, networkGroup);
+    auto dnsTask = new Task::DnsServerTask(serverIp, networkGroup);
+    auto httpTask = new Task::HttpServerTask(serverIp, sensorData, networkGroup);
 
     // Start scheduler
     vTaskStartScheduler();
@@ -59,6 +60,7 @@ int main()
     // Delete task objects, can silence some warnings about unused variables
     delete apTask;
     delete dhcpTask;
+    delete dnsTask;
     delete httpTask;
 
     return 0;

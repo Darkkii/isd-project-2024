@@ -5,7 +5,6 @@
 #include "network/dhcp/DhcpCommon.hpp"
 #include "network/dhcp/DhcpLease.hpp"
 #include "network/dhcp/DhcpMessage.hpp"
-#include <cyw43_configport.h>
 #include <lwip/api.h>
 #include <lwip/err.h>
 #include <lwip/ip4_addr.h>
@@ -18,6 +17,7 @@
 #include <cstdio>
 #include <cstring>
 #include <map>
+#include <pico.h>
 #include <string>
 #include <utility>
 #include <vector>
@@ -61,28 +61,22 @@ void DhcpServerTask::run()
     // We wait until AP task is ready before starting DHCP operations
     m_NetworkGroup->wait(Network::AP);
 
-    dhcpConnection = netconn_new(NETCONN_UDP);
+    m_Connection = netconn_new(NETCONN_UDP);
 
-    if (dhcpConnection != nullptr)
+    if (m_Connection != nullptr)
     {
-        netconn_bind(dhcpConnection, IP_ANY_TYPE, DHCP_SERVER_PORT);
+        netconn_bind(m_Connection, IP_ANY_TYPE, DHCP_SERVER_PORT);
     }
 
     Debug::printInfo("DHCP", "Listening on port %u", DHCP_SERVER_PORT);
     m_NetworkGroup->set(Network::DHCP);
 
-    // TODO: clean up logic
     while (true)
     {
-        err = netconn_recv(dhcpConnection, &receiveBuffer);
+        err = netconn_recv(m_Connection, &receiveBuffer);
 
         if (err == ERR_OK)
         {
-            Debug::printInfo("DHCP",
-                             "Message received, address: %s, port: %d",
-                             ip4addr_ntoa(&receiveBuffer->addr),
-                             receiveBuffer->port);
-
             if (receiveBuffer->p->tot_len < DHCP_MIN_SIZE) { err = ERR_VAL; }
             else
             {
@@ -97,6 +91,9 @@ void DhcpServerTask::run()
                     requestIp = requestIp <= DHCP_MAX_IP ? requestIp : 0;
                 }
             }
+
+            netbuf_free(receiveBuffer);
+            netbuf_delete(receiveBuffer);
         }
 
         if (err == ERR_OK)
@@ -104,14 +101,16 @@ void DhcpServerTask::run()
             switch (messageType)
             {
                 case DHCPDISCOVER:
-                    // TODO: function
-                    if (m_Leases.count(requestIp) == 1
-                        && !ipAvailable(m_Leases.at(requestIp).mac(),
-                                        message.getClientMac()))
+                    if (requestIp == 0
+                        || (m_Leases.count(requestIp) == 1
+                            && !ipAvailable(m_Leases.at(requestIp).mac(),
+                                            message.getClientMac())))
                     {
                         requestIp = 0;
 
-                        for (uint8_t ip = DHCP_MIN_SIZE; ip < DHCP_MAX_IP; ++ip)
+                        for (uint8_t ip = DHCP_MIN_IP;
+                             ip < DHCP_MAX_IP && requestIp == 0;
+                             ++ip)
                         {
                             if (m_Leases.count(ip) == 0)
                             {
@@ -143,10 +142,12 @@ void DhcpServerTask::run()
                     break;
 
                 case DHCPREQUEST:
-                    // TODO: function
-                    if (m_Leases.count(requestIp) == 0
-                        || ipAvailable(m_Leases.at(requestIp).mac(),
-                                       message.getClientMac()))
+                    if (requestIp == 0) { err = ERR_ARG; }
+
+                    if (err == ERR_OK
+                        && (m_Leases.count(requestIp) == 0
+                            || ipAvailable(m_Leases.at(requestIp).mac(),
+                                           message.getClientMac())))
                     {
                         // IP available, accept DHCP request
                         m_Leases.insert_or_assign(requestIp,
@@ -166,13 +167,16 @@ void DhcpServerTask::run()
                         Debug::printInfo("DHCP",
                                          "Client connected: "
                                          "MAC=%X:%X:%X:%X:%X:%X, "
-                                         "IP=192.168.0.%u",
+                                         "IP=%u.%u.%u.%u",
                                          mac.at(0),
                                          mac.at(1),
                                          mac.at(2),
                                          mac.at(3),
                                          mac.at(4),
                                          mac.at(5),
+                                         ip4_addr_get_byte(&m_ServerIp, 0),
+                                         ip4_addr_get_byte(&m_ServerIp, 1),
+                                         ip4_addr_get_byte(&m_ServerIp, 2),
                                          requestIp);
                     }
                     break;
@@ -196,17 +200,13 @@ void DhcpServerTask::run()
                 message.writeOption(DHCP_OPT_MSG_TYPE, DHCPNAK);
             }
 
-            // TODO: test responses
             auto buf = message.serialize();
             netbuf *sendBuffer = netbuf_new();
 
             netbuf_ref(sendBuffer, buf.data(), buf.size());
-            netconn_sendto(dhcpConnection, sendBuffer, IP4_ADDR_BROADCAST, DHCP_CLIENT_PORT);
+            netconn_sendto(m_Connection, sendBuffer, IP4_ADDR_BROADCAST, DHCP_CLIENT_PORT);
             netbuf_delete(sendBuffer);
         }
-
-        netbuf_free(receiveBuffer);
-        netbuf_delete(receiveBuffer);
     }
 }
 

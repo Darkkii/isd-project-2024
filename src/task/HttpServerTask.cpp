@@ -4,10 +4,13 @@
 #include "fs/File.hpp"
 #include "network/NetworkGroup.hpp"
 #include "network/http/HttpHeader.hpp"
+#include "projdefs.h"
+#include <hardware/timer.h>
 #include <lwip/api.h>
 #include <lwip/err.h>
 #include <lwip/netbuf.h>
 #include <lwip/tcpip.h>
+#include <pico/time.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -21,9 +24,11 @@ constexpr uint16_t KILOBYTE = 1024;
 err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, size_t *bytes_written);
 
 HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
+                               std::shared_ptr<Sensor::SensorData> sensorData,
                                std::shared_ptr<Network::NetworkGroup> networkGroup) :
-    BaseTask{"HttpServerTask", 256, this, MED},
+    BaseTask{"HttpServerTask", 768, this, MED},
     m_ServerIp{std::move(serverIp)},
+    m_SensorData{std::move(sensorData)},
     m_NetworkGroup{std::move(networkGroup)}
 {}
 
@@ -37,7 +42,7 @@ void HttpServerTask::run()
     std::string request;
 
     // We wait until AP, DHCP and DNS tasks are ready before starting HTTP operations
-    m_NetworkGroup->wait(Network::AP_DHCP_DNS);
+    m_NetworkGroup->wait(Network::AP_DHCP);
 
     request.resize(KILOBYTE); // Allocate 1kB for requests
 
@@ -54,7 +59,6 @@ void HttpServerTask::run()
 
     while (true)
     {
-        // TODO: add timeout and fetch sensor data from queue?
         err = netconn_accept(m_ServerConnection, &clientConnection);
 
         if (err == ERR_OK)
@@ -99,22 +103,35 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
     std::string path{request, start, end - start};
     std::string header;
 
-    static Fs::File indexHtml{Fs::INDEX_HTML};
-    static Fs::File scriptJs{Fs::SCRIPT_JS};
+    Fs::File indexHtml{Fs::INDEX_HTML};
+    Fs::File scriptJs{Fs::SCRIPT_JS};
 
     Debug::printInfo("HTTP", "Received GET request.");
 
     if (path == "/")
     {
-        header.assign(Network::Http::HttpHeader(200, indexHtml.size()).str());
+        header.assign(Network::Http::HttpHeader(200, indexHtml.size(), "text/html")
+                          .str());
         err = sendResponse(client, header, &indexHtml);
     }
     else if (path == "/script.js")
     {
-        header.assign(Network::Http::HttpHeader(200, scriptJs.size()).str());
+        header.assign(Network::Http::HttpHeader(200, scriptJs.size(), "text/javascript")
+                          .str());
         err = sendResponse(client, header, &scriptJs);
     }
-    // else if (path == "/data.json") {} // TODO: handle data path
+    else if (path == "/data.json")
+    {
+        std::string data{m_SensorData->getJson()};
+        header.assign(Network::Http::HttpHeader(200, data.size(), "application/json")
+                          .str());
+        err = sendResponse(client, header, data);
+    }
+    else if (path == "/favicon.ico")
+    {
+        header.assign(Network::Http::HttpHeader(200, 0, "text/plain").str());
+        err = sendResponse(client, header);
+    }
     else
     {
         // Redirect all other paths to root
@@ -139,7 +156,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
 
     if (err == ERR_OK && file != nullptr)
     {
-        int dataToSend;
+        size_t dataToSend;
 
         while (err == ERR_OK && totalSent < file->size())
         {
@@ -149,6 +166,38 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
                              : KILOBYTE;
 
             err = write(client, file->begin() + totalSent, dataToSend, 0, &sent);
+
+            while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
+
+            totalSent += sent;
+        }
+    }
+
+    return err;
+}
+
+err_t HttpServerTask::sendResponse(netconn *client, std::string &header, std::string &data) const
+{
+    err_t err = ERR_OK;
+    size_t totalSent = 0;
+    size_t sent = 0;
+
+    err = write(client, header.c_str(), header.length(), 0, &sent);
+
+    if (err == ERR_OK)
+    {
+        size_t dataToSend;
+
+        while (err == ERR_OK && totalSent < data.size())
+        {
+            // Send the file in up to 1kB chunks to the TCP to prevent errors
+            dataToSend = (data.size() - totalSent) < KILOBYTE
+                             ? (data.size() - totalSent)
+                             : KILOBYTE;
+
+            err = write(client, data.data() + totalSent, dataToSend, 0, &sent);
+
+            while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
 
             totalSent += sent;
         }

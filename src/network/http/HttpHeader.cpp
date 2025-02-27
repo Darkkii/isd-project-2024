@@ -2,9 +2,10 @@
 
 namespace Network::Http
 {
-HttpHeader::HttpHeader(uint16_t status, uint32_t length) :
+HttpHeader::HttpHeader(uint16_t status, uint32_t length, std::string contentType) :
     m_Header{"HTTP/1.1 " + std::to_string(status) + " OK\nContent-Length: "
-             + std::to_string(length) + "\nContent-Type: text/html; charset=utf-8\nConnection: close\n\n"}
+             + std::to_string(length) + "\nContent-Type: " + contentType
+             + "; charset=utf-8\nConnection: close\n\n"}
 {}
 
 HttpHeader::HttpHeader(const std::string &ip) :

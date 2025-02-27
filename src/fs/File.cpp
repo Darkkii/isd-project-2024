@@ -1,6 +1,7 @@
 #include "File.hpp"
 
 #include <cstdint>
+#include <iterator>
 
 // Variables for start and end of files included in the binary
 extern uint8_t fs_index_start, fs_index_end, fs_script_start, fs_script_end;
@@ -20,7 +21,7 @@ File::File(Filename filename) :
     m_Start{filename ? scriptStart : indexStart},
     m_End{filename ? scriptEnd : indexEnd},
     m_ReadHead{m_Start},
-    m_Size{static_cast<uint32_t>(m_End - m_Start)}
+    m_Size{static_cast<uint32_t>(std::distance(m_Start, m_End))}
 {}
 
 const std::string &File::read()

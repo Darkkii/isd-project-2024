@@ -1,5 +1,7 @@
 #include "SensorData.hpp"
 
+#include "rtos/semaphore/Mutex.hpp"
+
 #include <mutex>
 
 namespace Sensor
@@ -7,25 +9,25 @@ namespace Sensor
 
 void SensorData::setTemperature(double temperature)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Temperature = temperature;
 }
 
 void SensorData::setHumidity(double humidity)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Humidity = humidity;
 }
 
 void SensorData::setPressure(double pressure)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Pressure = pressure;
 }
 
 void SensorData::setCo2(double co2)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Co2 = co2;
 }
 
@@ -39,7 +41,7 @@ void SensorData::setParticles(double mass1_0,
                               double number10_0,
                               double partSize)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_mass1_0 = mass1_0;
     m_mass2_5 = mass2_5;
     m_mass4_0 = mass4_0;
@@ -53,24 +55,25 @@ void SensorData::setParticles(double mass1_0,
 
 void SensorData::setIllumination(double illumination)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Illumination = illumination;
 }
 
 void SensorData::setNoise(double noise)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Noise = noise;
 }
 
 void SensorData::setVoc(double voc)
 {
-    std::lock_guard lock(m_Access);
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     m_Voc = voc;
 }
 
-std::string SensorData::getJson() const
+std::string SensorData::getJson()
 {
+    std::lock_guard<Rtos::Semaphore::Mutex> lock(m_Access);
     return std::string{R"([
         {
           "name": {

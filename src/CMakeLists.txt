@@ -16,6 +16,15 @@ add_executable(${PROJECT_NAME}
         rtos/semaphore/Binary.cpp
         rtos/semaphore/Mutex.cpp
 
+        Display-lib/SSD1306_OLED.hpp
+        Display-lib/SSD1306_OLED.cpp
+        Display-lib/SSD1306_OLED_font.hpp
+        Display-lib/SSD1306_OLED_font.cpp
+        Display-lib/SSD1306_OLED_graphics.hpp
+        Display-lib/SSD1306_OLED_graphics.cpp
+        Display-lib/SSD1306_OLED_Print.hpp
+        Display-lib/SSD1306_OLED_Print.cpp
+
         sensor/SensorData.cpp
 
         task/AccessPointTask.cpp

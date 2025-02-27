@@ -4,7 +4,7 @@
 
 #include "I2CTask.h"
 
-//#include "Display-lib/SSD1306_OLED.hpp"
+#include "Display-lib/SSD1306_OLED.hpp"
 #include "pico/binary_info.h"
 #include "pico/cyw43_arch.h"
 #include "pico/stdlib.h"
@@ -22,7 +22,7 @@
 #include <cstdio>
 #include <utility>
 
-#define FULLSCREEN (128 * (64/8))
+#define FULLSCREEN (128 * (32/8))
 
 extern volatile uint8_t newDataOnMS430;
 
@@ -66,23 +66,22 @@ void I2CTask::run()
         }
         uartDevice->send("Done.\r\n");
 
-        //while(true){
-            vTaskDelay(10);
-        //}
-//
-////        auto display = SSD1306(128, 64, i2cDevice);
-////        uint8_t  screenBuffer[FULLSCREEN];
-////        if (!display.OLEDSetBufferPtr(128, 64, screenBuffer, sizeof(screenBuffer))) return;
-////        display.OLEDclearBuffer();
-////        display.OLEDbegin();
-////        display.OLEDFillScreen(0x15, 0); // F0splash screen bars, optional just for effect
-////        vTaskDelay(pdMS_TO_TICKS(1000));
-//////        display.OLEDStopScroll();
-//////        display.setTextColor(WHITE);
-////////        display.setCursor(10, 10);
-////////        display.print("I2C TEST");
-////        display.OLEDupdate();
-//////        vTaskDelay(pdMS_TO_TICKS(10000));
+        auto display = SSD1306(128, 32, i2cDevice);
+        uint8_t  screenBuffer[FULLSCREEN];
+        if (!display.OLEDSetBufferPtr(128, 32, screenBuffer, sizeof(screenBuffer))) return;
+        display.OLEDclearBuffer();
+        display.OLEDbegin();
+        display.OLEDFillScreen(0x15, 0); // F0splash screen bars, optional just for effect
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        display.OLEDStopScroll();
+        display.setTextColor(WHITE);
+        display.setCursor(10, 10);
+        display.print("I2C working");
+        display.OLEDupdate();
+
+        vTaskDelay(10);
+
+//        vTaskDelay(pdMS_TO_TICKS(10000));
 //
 //
 ////        if (!display.OLEDSetBufferPtr(128, 64, screenBuffer, sizeof(screenBuffer))) return;
@@ -101,6 +100,20 @@ void I2CTask::run()
 ////        display.OLEDupdate();
 ////        //            vTaskDelay(pdMS_TO_TICKS(1000));
 
+                    //Display
+                    if (!display.OLEDSetBufferPtr(128, 32, screenBuffer, sizeof(screenBuffer))) return;
+                    display.OLEDclearBuffer();
+                    //display.OLEDupdate();
+                    //vTaskDelay(1000);
+                    //display.OLEDclearBuffer();
+                    display.setTextColor(WHITE);
+                    display.setCursor(0, 0);
+                    display.setTextSize(1);
+                    display.print("WiFi: ISD_SENSOR_DATA\n\nIP: 192.168.0.1\n");
+                    //display.setCursor(0, 32);
+                    display.OLEDupdate();
+                    vTaskDelay(pdMS_TO_TICKS(100));
+
         auto rtc = RTCModule(i2cDevice, uartDevice);
 //        rtc.setDateTime(DateTime(2025,02,27,9,58,00)); //FIXME: Find way to always have accurate time
         std::string str = "DDD, DD MMM YYYY hh:mm:ss\r\n";
@@ -111,10 +124,7 @@ void I2CTask::run()
         strcpy(dateFormat2, str2.c_str());
         DateTime dateTime =  rtc.getDateTime();
 
-//        while(true){
-            vTaskDelay(10);
-//        }
-
+        vTaskDelay(10);
 
         //Setup MS430
         auto ms430 = MS430(i2cDevice);
@@ -124,10 +134,6 @@ void I2CTask::run()
         uartDevice->send(ms430.startCycleMode() != 0 ? "Write error CycleMode for Combi-Sensor\n" : "");
         vTaskDelay(pdMS_TO_TICKS(10));
         newDataOnMS430 = 0;
-
-//        while(true){
-            vTaskDelay(10);
-            //        }
 
         //SPS30
         //start Measurement
@@ -142,10 +148,8 @@ void I2CTask::run()
         sps30Data[0] = 0x03;
         sps30Data[1] = 0x00;
 
-//        while(true){
-            vTaskDelay(10);
-//                    }
-//
+        vTaskDelay(10);
+
         while (true)
         {
             //SensDust
@@ -177,6 +181,7 @@ void I2CTask::run()
                 sensorData->setPressure(ms430.pressure/100);
                 sensorData->setIllumination(ms430.illuminance);
                 sensorData->setNoise(ms430.dbA);
+                sensorData->setVoc(ms430.voc);
                // uartDevice->send("Done Reading MS430\r\n");
                 newDataOnMS430 = 0;
             }
@@ -184,8 +189,9 @@ void I2CTask::run()
             vTaskDelay(10);
 
 //            RTC-Modul
-            dateTime =  rtc.getDateTime();
-            uartDevice->send(dateTime.toString(dateFormat));
+            auto rtc2 = RTCModule(i2cDevice, uartDevice);
+            DateTime dateTime2 =  rtc2.getDateTime();
+            uartDevice->send(dateTime2.toString(dateFormat2));
             vTaskDelay(pdMS_TO_TICKS(1000));
 
             //Bonus SPS30 I2c -> 0x69
@@ -212,28 +218,14 @@ void I2CTask::run()
             auto sps30Decoded = SPS30<float>(&sps30Meas[0]);
             uartDevice->send("SPS30 data\r\n");
             uartDevice->send(sps30Decoded.toString());
-            sensorData->setParticles(sps30Decoded.mass1_0, sps30Decoded.mass2_5, sps30Decoded.mass4_0, sps30Decoded.mass10_0,
+            if(sps30Decoded.partSize > 0.001 &&
+                sps30Decoded.mass1_0 > 0.001 &&
+                sps30Decoded.mass2_5 > 0.001 &&
+                sps30Decoded.mass4_0 > 0.001 &&
+                sps30Decoded.mass10_0 > 0.001){
+                sensorData->setParticles(sps30Decoded.mass1_0, sps30Decoded.mass2_5, sps30Decoded.mass4_0, sps30Decoded.mass10_0,
                                      sps30Decoded.number1_0, sps30Decoded.number2_5, sps30Decoded.number4_0, sps30Decoded.number10_0, sps30Decoded.partSize);
-//
-//
-////            //Display
-////            if (!display.OLEDSetBufferPtr(128, 64, screenBuffer, sizeof(screenBuffer))) return;
-////
-////            display.OLEDclearBuffer();
-////            //display.OLEDupdate();
-////            //vTaskDelay(1000);
-////            //display.OLEDclearBuffer();
-////            display.setTextColor(WHITE);
-////            display.setCursor(32, 0);
-////            display.setTextSize(1);
-////            display.print("abcdef");
-////            //display.setCursor(0, 32);
-////            //display.print("12345678901234");
-//////            vTaskDelay(pdMS_TO_TICKS(1000));
-////            display.OLEDupdate();
-//////            vTaskDelay(pdMS_TO_TICKS(1000));
-//
-//        }
+            }
     }
 }
 

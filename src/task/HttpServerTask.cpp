@@ -26,7 +26,7 @@ err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, si
 HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
                                std::shared_ptr<Sensor::SensorData> sensorData,
                                std::shared_ptr<Network::NetworkGroup> networkGroup) :
-    BaseTask{"HttpServerTask", 768, this, MED},
+    BaseTask{"HttpServerTask", 1024, this, MED},
     m_ServerIp{std::move(serverIp)},
     m_SensorData{std::move(sensorData)},
     m_NetworkGroup{std::move(networkGroup)}
@@ -42,7 +42,7 @@ void HttpServerTask::run()
     std::string request;
 
     // We wait until AP, DHCP and DNS tasks are ready before starting HTTP operations
-    m_NetworkGroup->wait(Network::AP_DHCP);
+    m_NetworkGroup->wait(Network::AP_DHCP_DNS);
 
     request.resize(KILOBYTE); // Allocate 1kB for requests
 
@@ -67,10 +67,8 @@ void HttpServerTask::run()
 
             if (err == ERR_OK)
             {
-                // Copy the request into the buffer, only copy up to 1kB (-1 for null terminator)
-                uint16_t requestSize = netBuffer->p->tot_len < KILOBYTE
-                                           ? netBuffer->p->tot_len
-                                           : KILOBYTE - 1;
+                // Copy the request into the buffer
+                uint16_t requestSize = netBuffer->p->tot_len;
                 request.resize(requestSize);
                 netbuf_copy_partial(netBuffer, request.data(), request.length(), 0);
 
@@ -152,7 +150,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
     size_t totalSent = 0;
     size_t sent = 0;
 
-    err = write(client, header.c_str(), header.length(), 0, &sent);
+    err = write(client, header.c_str(), header.length(), NETCONN_COPY, &sent);
 
     if (err == ERR_OK && file != nullptr)
     {
@@ -165,7 +163,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
                              ? (file->size() - totalSent)
                              : KILOBYTE;
 
-            err = write(client, file->begin() + totalSent, dataToSend, 0, &sent);
+            err = write(client, file->begin() + totalSent, dataToSend, NETCONN_COPY, &sent);
 
             while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
 
@@ -182,7 +180,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, std::st
     size_t totalSent = 0;
     size_t sent = 0;
 
-    err = write(client, header.c_str(), header.length(), 0, &sent);
+    err = write(client, header.c_str(), header.length(), NETCONN_COPY, &sent);
 
     if (err == ERR_OK)
     {
@@ -195,7 +193,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, std::st
                              ? (data.size() - totalSent)
                              : KILOBYTE;
 
-            err = write(client, data.data() + totalSent, dataToSend, 0, &sent);
+            err = write(client, data.data() + totalSent, dataToSend, NETCONN_COPY, &sent);
 
             while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
 

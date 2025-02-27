@@ -1,6 +1,6 @@
 #include "Binary.hpp"
 
-namespace Semaphore
+namespace Rtos::Semaphore
 {
 
 Binary::Binary() { m_Semaphore = xSemaphoreCreateBinary(); }
@@ -16,4 +16,4 @@ void Binary::take() { xSemaphoreTake(m_Semaphore, portMAX_DELAY); }
 
 void Binary::give() { xSemaphoreGive(m_Semaphore); }
 
-} // namespace Semaphore
+} // namespace Rtos::Semaphore

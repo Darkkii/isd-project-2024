@@ -3,18 +3,29 @@
 #include "i2c/PicoI2C.hpp"
 #include "network/NetworkGroup.hpp"
 #include "queue.h"
+#include "sensor/MS430.h"
 #include "sensor/SensorData.hpp"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
 #include "task/DhcpServerTask.hpp"
 #include "task/DnsServerTask.hpp"
 #include "task/HttpServerTask.hpp"
+#include "task/I2CTask.h"
+#include "task/MHZTask.h"
+#include "task/MHZTaskParams.h"
 #include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
+#include "pico/stdlib.h"
 
 #include <cstdio>
 #include <memory>
+
+volatile uint8_t newDataOnMS430 = 0;
+
+void newMS430Data(uint gpio, uint32_t events){
+    if(gpio == RDY_PIN) { newDataOnMS430 = 1; }
+}
 
 extern "C"
 {
@@ -33,11 +44,22 @@ int main()
     stdio_init_all();
     printf("\nBoot\n");
 
+    int rdy = RDY_PIN;
+
+    gpio_init(rdy);
+    gpio_pull_up(rdy);
+    gpio_set_function(rdy, GPIO_FUNC_NULL);
+    gpio_set_irq_enabled_with_callback(RDY_PIN, GPIO_IRQ_EDGE_FALL, true, newMS430Data);
+
     // Create shared resources
     auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
     auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
-    auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
+
+    // 1) UART for general logging, e.g. pins 0/1 at 115200
+    auto logUart = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 115200);
+
+    // 2) UART for the MHZ19C sensor, pins 4/5 at 9600
+    auto sensorUart = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 9600, 1);
 
     // Event groups
     auto networkGroup = std::make_shared<Network::NetworkGroup>();
@@ -51,6 +73,26 @@ int main()
     auto dnsTask = new Task::DnsServerTask(serverIp, networkGroup);
     auto httpTask = new Task::HttpServerTask(serverIp, sensorData, networkGroup);
 
+    // 3) Create I2CTask using logUart for logs
+    auto i2cTask = new Task::I2CTask(picoI2c1, logUart, sensorData);
+
+    // 4) Create MHZTask parameter struct
+    auto mhzParams = new MHZTaskParams{
+        .sensorUart = sensorUart,
+        .logUart    = logUart,
+        .sensorData = sensorData,
+    };
+
+    // 5) Create the MHZTask
+    xTaskCreate(
+        MHZTask,                // The task function
+        "MHZTask",              // Task name
+        2048,                   // Stack size
+        mhzParams,             // Parameter (our struct)
+        tskIDLE_PRIORITY + 1,   // Priority
+        nullptr                 // No handle needed
+    );
+
     // Start scheduler
     vTaskStartScheduler();
 
@@ -61,6 +103,8 @@ int main()
     delete dhcpTask;
     delete dnsTask;
     delete httpTask;
+    delete i2cTask;
+    delete mhzParams;
 
     return 0;
 }

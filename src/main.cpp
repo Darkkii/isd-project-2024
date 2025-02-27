@@ -3,8 +3,7 @@
 #include "event_groups.h"
 #include "network/NetworkGroup.hpp"
 #include "queue.h"
-#include "rtos/Queue.hpp"
-#include "sensor/SensorReading.hpp"
+#include "sensor/SensorData.hpp"
 #include "task.h"
 #include "task/AccessPointTask.hpp"
 #include "task/DhcpServerTask.hpp"
@@ -44,14 +43,14 @@ int main()
     // Event groups
     auto networkGroup = std::make_shared<Network::NetworkGroup>();
 
-    // Create queues
-    auto dataQueue = std::make_shared<Rtos::Queue<Sensor::SensorReading, 10>>();
+    // Create shared data storage
+    auto sensorData = std::make_shared<Sensor::SensorData>();
 
     // Create task objects
     auto apTask = new Task::AccessPointTask(ssid, serverIp, networkGroup);
     auto dhcpTask = new Task::DhcpServerTask(serverIp, netmask, networkGroup);
     auto dnsTask = new Task::DnsServerTask(serverIp, networkGroup);
-    auto httpTask = new Task::HttpServerTask(serverIp, networkGroup);
+    auto httpTask = new Task::HttpServerTask(serverIp, sensorData, networkGroup);
 
     // Start scheduler
     vTaskStartScheduler();

@@ -71,7 +71,6 @@ void DhcpServerTask::run()
     Debug::printInfo("DHCP", "Listening on port %u", DHCP_SERVER_PORT);
     m_NetworkGroup->set(Network::DHCP);
 
-    // TODO: clean up logic
     while (true)
     {
         err = netconn_recv(m_Connection, &receiveBuffer);
@@ -102,7 +101,6 @@ void DhcpServerTask::run()
             switch (messageType)
             {
                 case DHCPDISCOVER:
-                    // TODO: function
                     if (requestIp == 0
                         || (m_Leases.count(requestIp) == 1
                             && !ipAvailable(m_Leases.at(requestIp).mac(),
@@ -144,7 +142,6 @@ void DhcpServerTask::run()
                     break;
 
                 case DHCPREQUEST:
-                    // TODO: function
                     if (requestIp == 0) { err = ERR_ARG; }
 
                     if (err == ERR_OK

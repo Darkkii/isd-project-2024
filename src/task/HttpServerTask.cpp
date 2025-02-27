@@ -24,9 +24,11 @@ constexpr uint16_t KILOBYTE = 1024;
 err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, size_t *bytes_written);
 
 HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
+                               std::shared_ptr<Sensor::SensorData> sensorData,
                                std::shared_ptr<Network::NetworkGroup> networkGroup) :
     BaseTask{"HttpServerTask", 768, this, MED},
     m_ServerIp{std::move(serverIp)},
+    m_SensorData{std::move(sensorData)},
     m_NetworkGroup{std::move(networkGroup)}
 {}
 
@@ -57,7 +59,6 @@ void HttpServerTask::run()
 
     while (true)
     {
-        // TODO: add timeout and fetch sensor data from queue?
         err = netconn_accept(m_ServerConnection, &clientConnection);
 
         if (err == ERR_OK)
@@ -121,36 +122,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
     }
     else if (path == "/data.json")
     {
-        // TODO: handle data path
-        std::string data{R"([
-  {
-    "name": {
-      "ger": "Temperatur",
-      "fin": "Lämpötila",
-      "en": "Temperature"
-    },
-    "value": "20.6",
-    "unit": "°C"
-  },
-  {
-    "name": {
-      "ger": "Luftfeuchtigkeit",
-      "fin": "Ilmankosteus",
-      "en": "Humidity"
-    },
-    "value": "45",
-    "unit": "%"
-  },
-  {
-    "name": {
-      "ger": "Luftdruck",
-      "fin": "Ilmanpaine",
-      "en": "Pressure"
-    },
-    "value": "1013",
-    "unit": "hPa"
-  }
-])"};
+        std::string data{m_SensorData->getJson()};
         header.assign(Network::Http::HttpHeader(200, data.size(), "application/json")
                           .str());
         err = sendResponse(client, header, data);
@@ -158,6 +130,7 @@ err_t HttpServerTask::handleRequest(netconn *client, const std::string &request)
     else if (path == "/favicon.ico")
     {
         header.assign(Network::Http::HttpHeader(200, 0, "text/plain").str());
+        err = sendResponse(client, header);
     }
     else
     {
@@ -179,7 +152,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
     size_t totalSent = 0;
     size_t sent = 0;
 
-    err = write(client, header.c_str(), header.length(), NETCONN_COPY, &sent);
+    err = write(client, header.c_str(), header.length(), 0, &sent);
 
     if (err == ERR_OK && file != nullptr)
     {
@@ -192,7 +165,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, Fs::Fil
                              ? (file->size() - totalSent)
                              : KILOBYTE;
 
-            err = write(client, file->begin() + totalSent, dataToSend, NETCONN_COPY, &sent);
+            err = write(client, file->begin() + totalSent, dataToSend, 0, &sent);
 
             while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
 
@@ -209,7 +182,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, std::st
     size_t totalSent = 0;
     size_t sent = 0;
 
-    err = write(client, header.c_str(), header.length(), NETCONN_COPY, &sent);
+    err = write(client, header.c_str(), header.length(), 0, &sent);
 
     if (err == ERR_OK)
     {
@@ -222,7 +195,7 @@ err_t HttpServerTask::sendResponse(netconn *client, std::string &header, std::st
                              ? (data.size() - totalSent)
                              : KILOBYTE;
 
-            err = write(client, data.data() + totalSent, dataToSend, NETCONN_COPY, &sent);
+            err = write(client, data.data() + totalSent, dataToSend, 0, &sent);
 
             while (dataToSend != sent) { vTaskDelay(pdMS_TO_TICKS(1)); }
 

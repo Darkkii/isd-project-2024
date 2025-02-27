@@ -130,28 +130,22 @@ function reloadWithQueryParamFor(selectedLang) {
 function downloadCsv() {
   let csvContent = "data:text/csv;charset=utf-8,";
 
-  csvContent += "Name (FIN),Name (GER), Name (EN), Value, Unit" + "\r\n";
+  csvContent += "Name (FIN),Name (GER), Name (EN), Value,Unit" + "\r\n";
   measurements.forEach(function (measurement) {
-    let row =
-      measurement.name.fin +
-      "," +
-      measurement.name.ger +
-      "," +
-      measurement.name.en +
-      "," +
-      parseFloat(measurement.value).toFixed(2) +
-      "," +
-      measurement.unit;
+    let skipRow = measurement.value === "" || measurement.unit === "";
+    if(skipRow) {
+      return;
+    }
+    let row = measurement.name.fin + "," + measurement.name.ger + "," + measurement.name.en + "," + measurement.value + "," + measurement.unit
     csvContent += row + "\r\n";
   });
-
   window.open(encodeURI(csvContent));
 }
 
 function setPageReload() {
   setTimeout(() => {
     location.reload();
-  }, 60000);
+  }, 10000);
 }
 
 function isGerman(lang) {

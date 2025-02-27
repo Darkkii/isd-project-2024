@@ -63,6 +63,12 @@ void SensorData::setNoise(double noise)
     m_Noise = noise;
 }
 
+void SensorData::setVoc(double voc)
+{
+    std::lock_guard lock(m_Access);
+    m_Voc = voc;
+}
+
 std::string SensorData::getJson() const
 {
     return std::string{R"([
@@ -96,6 +102,16 @@ std::string SensorData::getJson() const
                        + R"(",
           "unit": "hPa"
         },
+{
+      "name": {
+        "ger": "VOC-Luftqualität",
+        "fin": "VOC ilmanlaatu",
+        "en": "VOC air quality"
+      },
+      "value": ")" + std::to_string(m_number10_0)
+                       + R"(",
+      "unit": "ppm"
+    },
         {
           "name": {
             "ger": "CO2",
@@ -109,7 +125,7 @@ std::string SensorData::getJson() const
         {
           "name": {
             "ger": "Lichtstärke",
-            "fin": "???",
+            "fin": "Valonvoimakkuus",
             "en": "Illumination"
           },
           "value": ")" + std::to_string(m_Illumination)
@@ -119,17 +135,17 @@ std::string SensorData::getJson() const
         {
           "name": {
             "ger": "Lautstärke",
-            "fin": "???",
+            "fin": "Volume",
             "en": "Noise"
           },
           "value": ")" + std::to_string(m_Noise)
                        + R"(",
-          "unit": "dB"
+          "unit": "dBA"
         },
         {
           "name": {
             "ger": "Partikel",
-            "fin": "???",
+            "fin": "Hiukkaset",
             "en": "Particles"
           },
          "value": "",
@@ -138,7 +154,7 @@ std::string SensorData::getJson() const
 {
           "name": {
             "ger": "Partikelgröße",
-            "fin": "???",
+            "fin": "Hiukkaskoko",
             "en": "Particle size"
           },
           "value": ")" + std::to_string(m_partSize)
@@ -148,7 +164,7 @@ std::string SensorData::getJson() const
     {
          "name": {
            "ger": "Masse",
-           "fin": "???",
+           "fin": "Massa",
            "en": "Mass"
          },
          "value": "",
@@ -198,7 +214,7 @@ std::string SensorData::getJson() const
 {
        "name": {
          "ger": "Anzahl",
-         "fin": "???",
+         "fin": "Määrä",
          "en": "Number"
        },
        "value": "",
@@ -212,7 +228,7 @@ std::string SensorData::getJson() const
        },
        "value": ")" + std::to_string(m_number1_0)
                      + R"(",
-       "unit": "#/cm³"
+       "unit": "N/cm³"
      },
       {
       "name": {
@@ -222,7 +238,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number2_5)
                      + R"(",
-      "unit": "#/cm³"
+      "unit": "N/cm³"
       },
       {
       "name": {
@@ -232,7 +248,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number4_0)
                      + R"(",
-      "unit": "#/cm³"
+      "unit": "N/cm³"
     },
 {
       "name": {
@@ -242,7 +258,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number10_0)
                      + R"(",
-      "unit": "#/cm³"
+      "unit": "N/cm³"
     }
       ])"};
 }

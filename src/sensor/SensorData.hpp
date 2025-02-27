@@ -42,6 +42,7 @@ class SensorData
 
     double m_Illumination{255};
     double m_Noise{45};
+    double m_Voc{50.0};
 
 };
 

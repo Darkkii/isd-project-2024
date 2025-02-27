@@ -15,8 +15,15 @@ class SensorData
     void setHumidity(double humidity);
     void setPressure(double pressure);
     void setCo2(double co2);
-    void setParticles(double mass1_0, double mass2_5, double mass4_0, double mass10_0,
-                      double number1_0, double number2_5, double number4_0, double number10_0, double partSize);
+    void setParticles(double mass1_0,
+                      double mass2_5,
+                      double mass4_0,
+                      double mass10_0,
+                      double number1_0,
+                      double number2_5,
+                      double number4_0,
+                      double number10_0,
+                      double partSize);
     void setIllumination(double illumination);
     void setNoise(double noise);
     void setVoc(double voc);
@@ -43,7 +50,6 @@ class SensorData
     double m_Illumination{255};
     double m_Noise{45};
     double m_Voc{50.0};
-
 };
 
 } // namespace Sensor

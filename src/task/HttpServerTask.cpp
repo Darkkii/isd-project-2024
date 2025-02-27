@@ -26,7 +26,7 @@ err_t write(netconn *client, const void *dataptr, size_t size, u8_t apiflags, si
 HttpServerTask::HttpServerTask(const std::shared_ptr<std::string> serverIp,
                                std::shared_ptr<Sensor::SensorData> sensorData,
                                std::shared_ptr<Network::NetworkGroup> networkGroup) :
-    BaseTask{"HttpServerTask", 768, this, MED},
+    BaseTask{"HttpServerTask", 1024, this, MED},
     m_ServerIp{std::move(serverIp)},
     m_SensorData{std::move(sensorData)},
     m_NetworkGroup{std::move(networkGroup)}

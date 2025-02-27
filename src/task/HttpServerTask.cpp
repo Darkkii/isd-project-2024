@@ -42,7 +42,7 @@ void HttpServerTask::run()
     std::string request;
 
     // We wait until AP, DHCP and DNS tasks are ready before starting HTTP operations
-    m_NetworkGroup->wait(Network::AP_DHCP);
+    m_NetworkGroup->wait(Network::AP_DHCP_DNS);
 
     request.resize(KILOBYTE); // Allocate 1kB for requests
 

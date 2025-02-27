@@ -161,6 +161,56 @@ std::string SensorData::getJson() const
                        + R"(",
           "unit": "um"
         },
+
+{
+       "name": {
+         "ger": "Anzahl",
+         "fin": "Määrä",
+         "en": "Number"
+       },
+       "value": "",
+       "unit": ""
+     },
+      {
+       "name": {
+         "ger": "PM1.0",
+         "fin": "PM1.0",
+         "en": "PM1.0"
+       },
+       "value": ")" + std::to_string(m_number1_0)
+                       + R"(",
+       "unit": "N/cm³"
+     },
+      {
+      "name": {
+      "ger": "PM2.5",
+      "fin": "PM2.5",
+      "en": "PM2.5"
+      },
+      "value": ")" + std::to_string(m_number2_5)
+                       + R"(",
+      "unit": "N/cm³"
+      },
+      {
+      "name": {
+        "ger": "PM4.0",
+        "fin": "PM4.0",
+        "en": "PM4.0"
+      },
+      "value": ")" + std::to_string(m_number4_0)
+                       + R"(",
+      "unit": "N/cm³"
+    },
+{
+      "name": {
+        "ger": "PM10.0",
+        "fin": "PM10.0",
+        "en": "PM10.0"
+      },
+      "value": ")" + std::to_string(m_number10_0)
+                       + R"(",
+      "unit": "N/cm³"
+    },
     {
          "name": {
            "ger": "Masse",
@@ -209,57 +259,7 @@ std::string SensorData::getJson() const
         "value": ")" + std::to_string(m_mass10_0)
                        + R"(",
         "unit": "ug/m³"
-      },
-
-{
-       "name": {
-         "ger": "Anzahl",
-         "fin": "Määrä",
-         "en": "Number"
-       },
-       "value": "",
-       "unit": ""
-     },
-      {
-       "name": {
-         "ger": "PM1.0",
-         "fin": "PM1.0",
-         "en": "PM1.0"
-       },
-       "value": ")" + std::to_string(m_number1_0)
-                     + R"(",
-       "unit": "N/cm³"
-     },
-      {
-      "name": {
-      "ger": "PM2.5",
-      "fin": "PM2.5",
-      "en": "PM2.5"
-      },
-      "value": ")" + std::to_string(m_number2_5)
-                     + R"(",
-      "unit": "N/cm³"
-      },
-      {
-      "name": {
-        "ger": "PM4.0",
-        "fin": "PM4.0",
-        "en": "PM4.0"
-      },
-      "value": ")" + std::to_string(m_number4_0)
-                     + R"(",
-      "unit": "N/cm³"
-    },
-{
-      "name": {
-        "ger": "PM10.0",
-        "fin": "PM10.0",
-        "en": "PM10.0"
-      },
-      "value": ")" + std::to_string(m_number10_0)
-                     + R"(",
-      "unit": "N/cm³"
-    }
+      }
       ])"};
 }
 } // namespace Sensor

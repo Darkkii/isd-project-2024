@@ -27,7 +27,7 @@ class SensorData
     void setIllumination(double illumination);
     void setNoise(double noise);
     void setVoc(double voc);
-    [[nodiscard]] std::string getJson() const;
+    [[nodiscard]] std::string getJson();
 
   private:
     Rtos::Semaphore::Mutex m_Access{};

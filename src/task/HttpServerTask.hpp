@@ -3,8 +3,6 @@
 
 #include "FreeRTOS.h" // IWYU pragma: keep
 #include "fs/File.hpp"
-// #include "rtos/Queue.hpp"
-// #include "sensor/SensorReading.hpp"
 #include "network/NetworkGroup.hpp"
 #include "sensor/SensorData.hpp"
 #include "task/BaseTask.hpp"

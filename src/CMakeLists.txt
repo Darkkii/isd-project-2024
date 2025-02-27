@@ -25,6 +25,20 @@ add_executable(${PROJECT_NAME}
         task/HttpServerTask.cpp
 
         uart/PicoOsUart.cpp
+
+        sensor/RTClib.h
+        sensor/RTClib.cpp
+        sensor/SPS30.h
+        task/I2CTask.cpp
+        task/I2CTask.h
+        task/MHZTask.cpp
+        task/MHZTask.h
+        sensor/MS430.cpp
+        sensor/MS430.h
+        sensor/RTCModule.cpp
+        sensor/RTCModule.h
+        sensor/MHZ19CSensor.cpp
+        sensor/MHZ19CSensor.h
 )
 
 # Include directories

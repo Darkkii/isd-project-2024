@@ -29,10 +29,26 @@ void SensorData::setCo2(double co2)
     m_Co2 = co2;
 }
 
-void SensorData::setParticles(double particles)
+void SensorData::setParticles(double mass1_0,
+                              double mass2_5,
+                              double mass4_0,
+                              double mass10_0,
+                              double number1_0,
+                              double number2_5,
+                              double number4_0,
+                              double number10_0,
+                              double partSize)
 {
     std::lock_guard lock(m_Access);
-    m_Particles = particles;
+    m_mass1_0 = mass1_0;
+    m_mass2_5 = mass2_5;
+    m_mass4_0 = mass4_0;
+    m_mass10_0 = mass10_0;
+    m_number1_0 = number1_0;
+    m_number2_5 = number2_5;
+    m_number4_0 = number4_0;
+    m_number10_0 = number10_0;
+    m_partSize = partSize;
 }
 
 void SensorData::setIllumination(double illumination)
@@ -45,12 +61,6 @@ void SensorData::setNoise(double noise)
 {
     std::lock_guard lock(m_Access);
     m_Noise = noise;
-}
-
-void SensorData::setVoc(double voc)
-{
-    std::lock_guard lock(m_Access);
-    m_Voc = voc;
 }
 
 std::string SensorData::getJson() const
@@ -98,17 +108,7 @@ std::string SensorData::getJson() const
         },
         {
           "name": {
-            "ger": "???",
-            "fin": "???",
-            "en": "Particles"
-          },
-          "value": ")" + std::to_string(m_Particles)
-                       + R"(",
-          "unit": "???"
-        },
-        {
-          "name": {
-            "ger": "???",
+            "ger": "Lichtstärke",
             "fin": "???",
             "en": "Illumination"
           },
@@ -118,24 +118,132 @@ std::string SensorData::getJson() const
         },
         {
           "name": {
-            "ger": "???",
+            "ger": "Lautstärke",
             "fin": "???",
             "en": "Noise"
           },
           "value": ")" + std::to_string(m_Noise)
                        + R"(",
-          "unit": "???"
+          "unit": "dB"
         },
         {
           "name": {
-            "ger": "???",
+            "ger": "Partikel",
             "fin": "???",
-            "en": "VOC"
+            "en": "Particles"
           },
-          "value": ")" + std::to_string(m_Voc)
+         "value": "",
+          "unit": ""
+        },
+{
+          "name": {
+            "ger": "Partikelgröße",
+            "fin": "???",
+            "en": "Particle size"
+          },
+          "value": ")" + std::to_string(m_partSize)
                        + R"(",
-          "unit": "???"
-        }
+          "unit": "um"
+        },
+    {
+         "name": {
+           "ger": "Masse",
+           "fin": "???",
+           "en": "Mass"
+         },
+         "value": "",
+         "unit": ""
+       },
+        {
+         "name": {
+           "ger": "PM1.0",
+           "fin": "PM1.0",
+           "en": "PM1.0"
+         },
+         "value": ")" + std::to_string(m_mass1_0)
+                       + R"(",
+         "unit": "ug/m^3"
+       },
+        {
+        "name": {
+        "ger": "PM2.5",
+        "fin": "PM2.5",
+        "en": "PM2.5"
+        },
+        "value": ")" + std::to_string(m_mass2_5)
+                       + R"(",
+        "unit": "ug/m^3"
+        },
+        {
+        "name": {
+          "ger": "PM4.0",
+          "fin": "PM4.0",
+          "en": "PM4.0"
+        },
+        "value": ")" + std::to_string(m_mass4_0)
+                       + R"(",
+        "unit": "ug/m^3"
+      },
+{
+        "name": {
+          "ger": "PM10.0",
+          "fin": "PM10.0",
+          "en": "PM10.0"
+        },
+        "value": ")" + std::to_string(m_mass10_0)
+                       + R"(",
+        "unit": "ug/m^3"
+      },
+
+{
+       "name": {
+         "ger": "Anzahl",
+         "fin": "???",
+         "en": "Number"
+       },
+       "value": "",
+       "unit": ""
+     },
+      {
+       "name": {
+         "ger": "PM1.0",
+         "fin": "PM1.0",
+         "en": "PM1.0"
+       },
+       "value": ")" + std::to_string(m_number1_0)
+                     + R"(",
+       "unit": "#/cm^3"
+     },
+      {
+      "name": {
+      "ger": "PM2.5",
+      "fin": "PM2.5",
+      "en": "PM2.5"
+      },
+      "value": ")" + std::to_string(m_number2_5)
+                     + R"(",
+      "unit": "#/cm^3"
+      },
+      {
+      "name": {
+        "ger": "PM4.0",
+        "fin": "PM4.0",
+        "en": "PM4.0"
+      },
+      "value": ")" + std::to_string(m_number4_0)
+                     + R"(",
+      "unit": "#/cm^3"
+    },
+{
+      "name": {
+        "ger": "PM10.0",
+        "fin": "PM10.0",
+        "en": "PM10.0"
+      },
+      "value": ")" + std::to_string(m_number10_0)
+                     + R"(",
+      "unit": "#/cm^3"
+    }
       ])"};
 }
 } // namespace Sensor

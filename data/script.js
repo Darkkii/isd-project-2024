@@ -80,7 +80,11 @@ async function setTableContent(selectedLang) {
               ? measurement.name.fin
               : measurement.name.en
           }</td>
-          <td>${parseFloat(measurement.value).toFixed(2)} ${measurement.unit}</td>
+           <td>${
+            isNaN(parseFloat(measurement.value))
+                ? ""
+                : parseFloat(measurement.value).toFixed(2)
+        } ${measurement.unit}</td>
       </tr>
       `;
       });

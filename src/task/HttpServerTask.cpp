@@ -67,10 +67,8 @@ void HttpServerTask::run()
 
             if (err == ERR_OK)
             {
-                // Copy the request into the buffer, only copy up to 1kB (-1 for null terminator)
-                uint16_t requestSize = netBuffer->p->tot_len < KILOBYTE
-                                           ? netBuffer->p->tot_len
-                                           : KILOBYTE - 1;
+                // Copy the request into the buffer
+                uint16_t requestSize = netBuffer->p->tot_len;
                 request.resize(requestSize);
                 netbuf_copy_partial(netBuffer, request.data(), request.length(), 0);
 

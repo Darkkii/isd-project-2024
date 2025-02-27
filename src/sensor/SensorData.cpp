@@ -162,7 +162,7 @@ std::string SensorData::getJson() const
          },
          "value": ")" + std::to_string(m_mass1_0)
                        + R"(",
-         "unit": "ug/m^3"
+         "unit": "ug/m³"
        },
         {
         "name": {
@@ -172,7 +172,7 @@ std::string SensorData::getJson() const
         },
         "value": ")" + std::to_string(m_mass2_5)
                        + R"(",
-        "unit": "ug/m^3"
+        "unit": "ug/m³"
         },
         {
         "name": {
@@ -182,7 +182,7 @@ std::string SensorData::getJson() const
         },
         "value": ")" + std::to_string(m_mass4_0)
                        + R"(",
-        "unit": "ug/m^3"
+        "unit": "ug/m³"
       },
 {
         "name": {
@@ -192,7 +192,7 @@ std::string SensorData::getJson() const
         },
         "value": ")" + std::to_string(m_mass10_0)
                        + R"(",
-        "unit": "ug/m^3"
+        "unit": "ug/m³"
       },
 
 {
@@ -212,7 +212,7 @@ std::string SensorData::getJson() const
        },
        "value": ")" + std::to_string(m_number1_0)
                      + R"(",
-       "unit": "#/cm^3"
+       "unit": "#/cm³"
      },
       {
       "name": {
@@ -222,7 +222,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number2_5)
                      + R"(",
-      "unit": "#/cm^3"
+      "unit": "#/cm³"
       },
       {
       "name": {
@@ -232,7 +232,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number4_0)
                      + R"(",
-      "unit": "#/cm^3"
+      "unit": "#/cm³"
     },
 {
       "name": {
@@ -242,7 +242,7 @@ std::string SensorData::getJson() const
       },
       "value": ")" + std::to_string(m_number10_0)
                      + R"(",
-      "unit": "#/cm^3"
+      "unit": "#/cm³"
     }
       ])"};
 }

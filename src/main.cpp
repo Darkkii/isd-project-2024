@@ -1,6 +1,6 @@
 #include "FreeRTOS.h" // IWYU pragma: keep
-// #include "i2c/PicoI2C.hpp" // TODO: enable before merging
 #include "event_groups.h"
+#include "i2c/PicoI2C.hpp"
 #include "network/NetworkGroup.hpp"
 #include "queue.h"
 #include "sensor/SensorData.hpp"
@@ -9,7 +9,7 @@
 #include "task/DhcpServerTask.hpp"
 #include "task/DnsServerTask.hpp"
 #include "task/HttpServerTask.hpp"
-// #include "uart/PicoOsUart.hpp" // TODO: enable before merging
+#include "uart/PicoOsUart.hpp"
 #include <hardware/structs/timer.h>
 #include <pico/stdio.h>
 
@@ -33,12 +33,11 @@ int main()
     stdio_init_all();
     printf("\nBoot\n");
 
-    // TODO: enable before merging
     // Create shared resources
-    // auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
-    // auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
-    // auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
-    // auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
+    auto picoI2c0 = std::make_shared<I2c::PicoI2C>(I2c::BUS_0);
+    auto picoI2c1 = std::make_shared<I2c::PicoI2C>(I2c::BUS_1);
+    auto picoUart0 = std::make_shared<Uart::PicoOsUart>(0, 0, 1, 9600);
+    auto picoUart1 = std::make_shared<Uart::PicoOsUart>(1, 4, 5, 115200);
 
     // Event groups
     auto networkGroup = std::make_shared<Network::NetworkGroup>();
